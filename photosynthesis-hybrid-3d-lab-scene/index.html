@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>验证绿叶在光下合成淀粉 · 混合3D实验</title>
+  <link rel="stylesheet" href="./lab.css">
+</head>
+<body>
+<main id="app">
+  <section id="stage" aria-label="验证绿叶在光下合成淀粉实验台">
+    <img id="background" src="./assets/background-clean-v4.png" alt="实验室背景">
+    <div id="sunGlow" aria-hidden="true"></div>
+    <div id="webgl" aria-label="三维实验器材"></div>
+
+    <nav id="modeBar" aria-label="实验控制">
+      <button id="prepareMode" class="active">准备实验</button>
+      <button id="experimentMode">开始实验</button>
+      <button id="pauseBtn" disabled>暂停</button>
+      <button id="resetBtn">重置实验</button>
+      <button id="fullBtn">全屏</button>
+    </nav>
+    <header id="experimentHeading"><h1>验证绿叶在光下合成淀粉</h1><p>选自北师大版·七年级上册·第4章 第1节 光合作用</p></header>
+
+    <div id="cabinetZone"><span>天竺葵投放区</span></div>
+    <div id="sunZone"><strong>阳光区</strong><span>把暗处理后的天竺葵拖到此区域</span></div>
+    <div id="doorWrap"><img id="cabinetDoor" src="./assets/cabinet-door-cropped.png" alt="暗处理柜门" draggable="false"></div>
+
+    <div id="guide"><b id="guideTitle">准备实验</b><span id="guideText">查看器材名称与位置，确认后点击“开始实验”</span></div>
+    <div id="timer"><strong id="timerValue">10</strong><small>秒</small></div>
+    <div id="lightAction"><button id="lightBtn">开始照光 10S</button><span>黑纸和回形针固定完成后开始</span></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <div id="labels" aria-hidden="true"></div>
+    <div id="rotate"><div><i>↻</i><h2>请横向放置设备</h2><p>横屏可完整显示实验台与拖拽区域</p></div></div>
+  </section>
+</main>
+<script defer src="./app.bundle.js"></script>
+</body>
+</html>
