@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="破壳 BIRDCANFLY:让教材里的生物知识破壳而出,变成可亲手转动的 3D 模型、虚拟实验与课堂游戏。">
+<title>破壳 · BIRDCANFLY</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d10'/%3E%3Cpath d='M32 11c-8 0-15 13-15 24a15 15 0 0 0 30 0c0-11-7-24-15-24z' fill='none' stroke='%23b8e04e' stroke-width='3.5' stroke-linejoin='round'/%3E%3Cpath d='M24 23l7 5.5-6 5.5 8 7' fill='none' stroke='%23b8e04e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f7f4; --card:#ffffff; --ink:#17191d; --muted:#6c7177;
+  --g900:#0b0d10; --g100:#edf0ea;
+  --lime:#b8e04e; --lime-d:#7ca22c; --lime-x:#5f8b1e;
+  --line:#e7e7e1; --radius:16px;
+  --shadow:0 14px 40px rgba(11,13,16,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+.skip{position:absolute;left:-999px;top:0;background:var(--lime);color:#16220a;padding:8px 14px;border-radius:0 0 8px 0;z-index:99;font-size:13px}
+.skip:focus{left:0}
+.shell{display:flex;min-height:100vh}
+
+/* ---------- 侧栏 ---------- */
+.sidebar{width:268px;flex-shrink:0;background:var(--g900);color:#d3d8dd;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;gap:11px;align-items:center;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.brand-mark{width:40px;height:40px;border-radius:12px;background:rgba(184,224,78,.13);display:grid;place-items:center;flex-shrink:0}
+.brand strong{font-size:15px;letter-spacing:1px;display:block;color:#fff}
+.brand small{font-size:10px;letter-spacing:2.5px;color:#7d8894;display:block;margin-top:3px}
+.nav-block{padding:14px 12px 6px}
+.nav-title{font-size:11px;letter-spacing:2.5px;color:#66707b;padding:6px 10px}
+.s-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;color:#b9c2cb;font-size:14px;padding:9px 10px;border-radius:9px;cursor:pointer;position:relative}
+.s-item small{margin-left:auto;font-size:11px;color:#77828d;background:rgba(255,255,255,.06);border-radius:999px;padding:1px 8px}
+.s-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.s-item.active{background:rgba(184,224,78,.14);color:#eaf6d6}
+.s-item.active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;background:var(--lime)}
+.s-group{font-size:11px;color:#66707b;margin:12px 10px 4px;letter-spacing:1px}
+.side-foot{margin-top:auto;padding:16px 18px;font-size:11px;line-height:1.9;color:#77828d;border-top:1px solid rgba(255,255,255,.07)}
+.side-foot svg{display:block;margin-bottom:8px}
+
+/* ---------- 教材目录树 ---------- */
+.t-row{display:flex;align-items:center;gap:7px;width:100%;text-align:left;background:none;border:none;color:#b9c2cb;font-size:13px;padding:7px 10px;border-radius:8px;cursor:pointer;position:relative;list-style:none}
+.t-row::-webkit-details-marker{display:none}
+.t-row:hover{background:rgba(255,255,255,.06);color:#fff}
+.t-row.active{background:rgba(184,224,78,.14);color:#eaf6d6}
+.t-row.active::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:2px;background:var(--lime)}
+.t-row small{margin-left:auto;font-size:10.5px;color:#77828d;background:rgba(255,255,255,.06);border-radius:999px;padding:1px 7px;flex-shrink:0}
+.t-lab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chev{font-size:8px;color:#66707b;transition:transform .18s ease;flex-shrink:0;width:9px;text-align:center}
+details[open] > summary .chev{transform:rotate(90deg)}
+.t-kids{margin-left:17px;border-left:1px solid rgba(255,255,255,.07);padding-left:3px}
+.t-unit .t-lab{font-size:11.5px;color:#8d99a5;letter-spacing:.3px}
+.t-chap .t-lab{font-size:12.5px}
+.t-leaf{padding-left:26px}
+.t-sec{padding:5px 10px}
+.t-sec .t-lab{font-size:12px;color:#9aa5ae}
+.t-sec.active .t-lab{color:#eaf6d6}
+.t-num{font-size:10px;color:#66707b;flex-shrink:0;width:11px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- 主区 / 首屏 ---------- */
+.main{flex:1;min-width:0}
+.hero{position:relative;overflow:hidden;background:linear-gradient(140deg,#08090c 0%,#0d1218 55%,#131b26 100%);color:#eef2f6;padding:76px 56px 66px}
+.hero-deco{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(circle at 87% 14%, rgba(184,224,78,.15), transparent 34%),
+  radial-gradient(circle at 97% 70%, rgba(184,224,78,.06), transparent 26%),
+  radial-gradient(circle at 6% 90%, rgba(104,146,255,.07), transparent 30%),
+  radial-gradient(circle at 62% 100%, rgba(255,255,255,.05), transparent 30%)}
+.hero-dots{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1.4px);background-size:30px 30px;-webkit-mask-image:linear-gradient(105deg,transparent 50%,#000 92%);mask-image:linear-gradient(105deg,transparent 50%,#000 92%)}
+.flock{position:absolute;right:52px;top:58px;width:min(520px,44vw);pointer-events:none}
+.flock path{transform-box:fill-box;transform-origin:center;animation:drift 7s ease-in-out infinite}
+.flock path:nth-child(2){animation-delay:-1.2s;animation-duration:8s}
+.flock path:nth-child(3){animation-delay:-2.4s}
+.flock path:nth-child(4){animation-delay:-3.1s;animation-duration:9s}
+.flock path:nth-child(5){animation-delay:-4.2s}
+.flock path:nth-child(6){animation-delay:-5s;animation-duration:8.5s}
+.flock path:nth-child(7){animation-delay:-2s;animation-duration:9.5s}
+.flock path:nth-child(8){animation-delay:-6s}
+@keyframes drift{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-9px) rotate(-1.5deg)}}
+.hero-inner{position:relative}
+.kicker{font-size:12px;letter-spacing:3.5px;color:var(--lime);display:flex;align-items:center;gap:9px}
+.kicker svg{animation:drift 5s ease-in-out infinite;flex-shrink:0}
+.hero h1{font-size:clamp(30px,4.6vw,48px);line-height:1.28;margin:16px 0 18px;font-weight:700;letter-spacing:.5px;background:linear-gradient(115deg,#ffffff 55%,#d9eeaa 92%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#fff}
+.lede{max-width:640px;font-size:17px;line-height:1.9;color:#cdd6de;font-weight:500}
+.lede em{font-style:normal;color:var(--lime)}
+.hero-note{margin-top:10px;font-size:12.5px;letter-spacing:.6px;color:#8b96a3}
+.cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 24px;border-radius:999px;font-size:14px;cursor:pointer;border:1px solid transparent}
+.btn.solid{background:var(--lime);color:#16220a;font-weight:600;box-shadow:0 8px 28px rgba(184,224,78,.22)}
+.btn.solid:hover{background:#c7ec68}
+.btn.ghost{border-color:rgba(255,255,255,.24);color:#eef2f6}
+.btn.ghost:hover{border-color:var(--lime);color:var(--lime)}
+.stats{display:flex;gap:46px;margin-top:42px;flex-wrap:wrap}
+.stats strong{font-size:27px;font-weight:700;color:#fff}
+.stats span{display:block;font-size:12px;color:#93a0ad;margin-top:4px;letter-spacing:1px}
+
+.sec{padding:46px 56px 6px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+.sec-head h2{font-size:21px;font-weight:700;letter-spacing:1px}
+.sec-head a{margin-left:auto;font-size:13px;color:var(--lime-d)}
+.sec-head a:hover{color:var(--lime-x)}
+.sec-head .count{margin-left:auto;font-size:13px;color:var(--muted)}
+.crumb{font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:22px}
+.sub-h{font-size:14px;color:var(--muted);margin:30px 0 14px;font-weight:500;letter-spacing:1px}
+.empty{font-size:14px;color:var(--muted);line-height:2;padding:20px 0}
+
+/* ---------- 卡片 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:#d8d8d0}
+.card-cover{position:relative;aspect-ratio:16/9.6;background:var(--g100);overflow:hidden}
+.card-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.chip{position:absolute;left:12px;top:12px;background:rgba(11,13,16,.82);color:#e6f2cf;font-size:11px;padding:3px 10px;border-radius:999px;letter-spacing:1px}
+.card-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:7px;flex:1}
+.card-top{display:flex;align-items:center;gap:8px}
+.card-top h3{font-size:16.5px;font-weight:700}
+.badge{font-size:10.5px;padding:2px 9px;border-radius:999px;letter-spacing:1px;flex-shrink:0}
+.badge.hot{background:#eaf5d6;color:#7ca22c}
+.badge.soonb{background:#f0f0ec;color:#9a9584}
+.card-tag{font-size:12px;color:var(--muted);letter-spacing:.4px}
+.card-desc{font-size:13px;line-height:1.75;color:#4a5056;flex:1}
+.open{font-size:13px;color:var(--lime-d);font-weight:600;margin-top:6px}
+.card:hover .open{color:var(--lime-x)}
+.card.soon{background:#fbfbf8;border-style:dashed}
+.card.soon:hover{transform:none;box-shadow:none}
+.soon-cover{aspect-ratio:16/9.6;background:repeating-linear-gradient(135deg, rgba(11,13,16,.045) 0 14px, transparent 14px 28px);display:grid;place-items:center;border-bottom:1px dashed var(--line)}
+.soon-cover span{font-size:12px;letter-spacing:3px;color:#8b958f;border:1px solid #d9ded6;padding:6px 15px;border-radius:999px;background:#fff}
+.eggpill{display:inline-flex;align-items:center;gap:7px}
+
+/* ---------- 筛选 chips(移动端) ---------- */
+.chips{display:none;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.chips button{border:1px solid var(--line);background:#fff;font-size:12.5px;color:#4c5257;padding:6px 13px;border-radius:999px;cursor:pointer}
+.chips button.active{background:var(--g900);color:#e6f2cf;border-color:var(--g900)}
+
+.foot{padding:44px 56px 56px;color:#8b918f;font-size:12px;line-height:2}
+
+/* ---------- 移动端 ---------- */
+.menu-btn{display:none}
+.backdrop{display:none}
+@media (max-width:920px){
+  .sidebar{position:fixed;z-index:40;left:0;top:0;transform:translateX(-100%);transition:transform .22s ease}
+  .sidebar.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.4)}
+  .backdrop.show{display:block;position:fixed;inset:0;background:rgba(8,10,13,.5);z-index:35}
+  .menu-btn{display:grid;place-items:center;gap:4px;position:fixed;z-index:30;left:14px;top:14px;width:44px;height:44px;border-radius:13px;background:var(--g900);border:none;cursor:pointer;padding:10px}
+  .menu-btn span{display:block;width:100%;height:2px;background:#d3d8dd;border-radius:2px}
+  .hero{padding:80px 24px 52px}
+  .flock{right:8px;top:26px;width:250px;opacity:.75}
+  .sec{padding:38px 20px 6px}
+  .chips{display:flex}
+  .foot{padding:34px 20px 48px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<button class="menu-btn" id="menuBtn" aria-label="打开导航"><span></span><span></span><span></span></button>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar" aria-label="网站导航">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2.8C9 2.8 5.5 8.8 5.5 13.8a6.5 6.5 0 0 0 13 0c0-5-3.5-11-6.5-11z" stroke="#b8e04e" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M9 8.5l2.2 2-1.8 2 2.3 2.1" stroke="#b8e04e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div><strong>破壳</strong><small>BIRDCANFLY</small></div>
+    </div>
+    <div class="nav-block">
+      <p class="nav-title">栏目</p>
+      <a class="s-item" href="#/home" data-nav="home"><span>首页</span></a>
+      <a class="s-item" href="#/resources" data-nav="resources"><span>资源柜</span><small id="navCount">0</small></a>
+    </div>
+    <div class="nav-block">
+      <p class="nav-title">教材目录 · 北师大版</p>
+      <div id="scopeNav"></div>
+    </div>
+    <div class="side-foot">
+      <svg width="56" height="12" viewBox="0 0 56 12" fill="none" aria-hidden="true">
+        <path d="M2 9c2-4.5 5-4.5 7 0 2-4.5 5-4.5 7 0" stroke="#77828d" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M24 6.5c1.5-3.5 4-3.5 5.5 0 1.5-3.5 4-3.5 5.5 0" stroke="#77828d" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M43 9c1.2-3 3.2-3 4.4 0 1.2-3 3.2-3 4.4 0" stroke="#77828d" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+      纯静态资源库 · 免登录<br>教室大屏、平板、手机均可直接使用
+    </div>
+  </aside>
+
+  <main class="main" id="main"></main>
+</div>
+
+<script src="catalog.js"></script>
+<script>
+(function () {
+  var CAT = window.SITE_CATALOG || [];
+  var BOOKS = window.SITE_BOOKS || [];
+  var main = document.getElementById('main');
+  var scopeNav = document.getElementById('scopeNav');
+  var scope = 'all';
+
+  var EGG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2.8C9 2.8 5.5 8.8 5.5 13.8a6.5 6.5 0 0 0 13 0c0-5-3.5-11-6.5-11z" stroke="#8b958f" stroke-width="2"/><path d="M9 8.5l2.2 2-1.8 2 2.3 2.1" stroke="#8b958f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var KBIRD = '<svg width="17" height="11" viewBox="0 0 17 11" fill="none" aria-hidden="true"><path d="M1 9.5C3 3.5 6.5 3.5 8.5 9" stroke="#b8e04e" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 9C10.5 3.5 14 3.5 16 9.5" stroke="#b8e04e" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+  /* ---------- 目录树工具 ---------- */
+  function inScope(node, s) {
+    if (s === 'all') return true;
+    return node === s || node.indexOf(s + '-') === 0;
+  }
+  function countUnder(s) {
+    var n = 0;
+    CAT.forEach(function (c) { if (inScope(c.node, s)) n++; });
+    return n;
+  }
+  function findNode(id) {
+    for (var i = 0; i < BOOKS.length; i++) {
+      var b = BOOKS[i];
+      if (b.id === id) return { book: b, title: b.label, crumb: '北师大版 · ' + b.stage, tag: b.short };
+      for (var j = 0; j < b.units.length; j++) {
+        var u = b.units[j];
+        for (var k = 0; k < u.chapters.length; k++) {
+          var c = u.chapters[k];
+          if (c.id === id) return { book: b, unit: u, chapter: c, title: c.label, crumb: b.label, tag: b.short + ' · ' + c.label };
+          for (var n = 0; n < c.sections.length; n++) {
+            if (c.id + '-' + (n + 1) === id) {
+              return { book: b, unit: u, chapter: c, title: '第' + (n + 1) + '节 ' + c.sections[n], crumb: b.label + ' · ' + c.label, tag: b.short + ' · ' + c.label + ' · 第' + (n + 1) + '节 ' + c.sections[n] };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+  function tagOf(it) {
+    var nd = findNode(it.node);
+    return nd ? nd.tag : '未分类';
+  }
+
+  /* ---------- 侧栏目录树(原生 details 折叠) ---------- */
+  function buildNav() {
+    var html = '<button class="t-row' + (scope === 'all' ? ' active' : '') + '" data-scope="all"><span class="t-lab">全部资源</span><small>' + CAT.length + '</small></button>';
+    var stages = [];
+    BOOKS.forEach(function (b) { if (stages.indexOf(b.stage) < 0) stages.push(b.stage); });
+    stages.forEach(function (st) {
+      html += '<p class="s-group">' + st + '</p>';
+      BOOKS.forEach(function (b) {
+        if (b.stage !== st) return;
+        var nb = countUnder(b.id);
+        html += '<details class="t-node">' +
+          '<summary class="t-row t-book" data-scope="' + b.id + '"><span class="chev">▸</span><span class="t-lab">' + b.label + '</span>' + (nb ? '<small>' + nb + '</small>' : '') + '</summary>' +
+          '<div class="t-kids">';
+        b.units.forEach(function (u) {
+          html += '<details class="t-node">' +
+            '<summary class="t-row t-unit"><span class="chev">▸</span><span class="t-lab">' + u.label + '</span></summary>' +
+            '<div class="t-kids">';
+          u.chapters.forEach(function (c) {
+            var nc = countUnder(c.id);
+            if (!c.sections.length) {
+              html += '<button class="t-row t-chap t-leaf" data-scope="' + c.id + '"><span class="t-lab">' + c.label + '</span>' + (nc ? '<small>' + nc + '</small>' : '') + '</button>';
+            } else {
+              html += '<details class="t-node">' +
+                '<summary class="t-row t-chap" data-scope="' + c.id + '"><span class="chev">▸</span><span class="t-lab">' + c.label + '</span>' + (nc ? '<small>' + nc + '</small>' : '') + '</summary>' +
+                '<div class="t-kids">';
+              c.sections.forEach(function (s, i) {
+                var sid = c.id + '-' + (i + 1);
+                var ns = countUnder(sid);
+                html += '<button class="t-row t-sec" data-scope="' + sid + '"><span class="t-num">' + (i + 1) + '</span><span class="t-lab">' + s + '</span>' + (ns ? '<small>' + ns + '</small>' : '') + '</button>';
+              });
+              html += '</div></details>';
+            }
+          });
+          html += '</div></details>';
+        });
+        html += '</div></details>';
+      });
+    });
+    scopeNav.innerHTML = html;
+  }
+  function isActive(id) {
+    if (id === 'all') return scope === 'all';
+    return scope === id || scope.indexOf(id + '-') === 0;
+  }
+  function refreshActive() {
+    var rows = scopeNav.querySelectorAll('[data-scope]');
+    for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('active', isActive(rows[i].getAttribute('data-scope')));
+  }
+  function expandActivePath() {
+    var el = scopeNav.querySelector('[data-scope="' + scope + '"]');
+    if (!el) return;
+    var from = el.tagName === 'SUMMARY' ? el.parentElement.parentElement : el.parentElement;
+    var d = from ? from.closest('details') : null;
+    while (d) { d.open = true; d = d.parentElement ? d.parentElement.closest('details') : null; }
+  }
+
+  /* ---------- 卡片 ---------- */
+  function card(it) {
+    if (it.status === 'soon') {
+      return '<div class="card soon">' +
+        '<div class="soon-cover"><span class="eggpill">' + EGG + it.type + '</span></div>' +
+        '<div class="card-body">' +
+          '<div class="card-top"><h3>' + it.title + '</h3><span class="badge soonb">孵化中</span></div>' +
+          '<p class="card-tag">' + tagOf(it) + '</p>' +
+          '<p class="card-desc">' + it.desc + '</p>' +
+        '</div></div>';
+    }
+    return '<a class="card" href="' + it.url + '" target="_blank" rel="noopener">' +
+      '<div class="card-cover">' + (it.cover ? '<img src="' + it.cover + '" alt="' + it.title + '封面" loading="lazy">' : '') +
+      '<span class="chip">' + it.type + '</span></div>' +
+      '<div class="card-body">' +
+        '<div class="card-top"><h3>' + it.title + '</h3>' + (it.featured ? '<span class="badge hot">精选</span>' : '') + '</div>' +
+        '<p class="card-tag">' + tagOf(it) + '</p>' +
+        '<p class="card-desc">' + it.desc + '</p>' +
+        '<span class="open">打开资源 →</span>' +
+      '</div></a>';
+  }
+
+  function chipsHTML() {
+    var html = '<button data-scope="all" class="' + (scope === 'all' ? 'active' : '') + '">全部 ' + CAT.length + '</button>';
+    BOOKS.forEach(function (b) {
+      var n = countUnder(b.id);
+      if (n) html += '<button data-scope="' + b.id + '" class="' + (scope === b.id ? 'active' : '') + '">' + b.label + ' ' + n + '</button>';
+    });
+    return html;
+  }
+
+  var FOOT = '<footer class="foot">破壳 BIRDCANFLY · 所有资源均为自包含网页,下载后可离线使用 · 教学内容以北师大版教材为准<br>新增资源:放入 apps/ 目录,并在 catalog.js 中登记一条记录即可</footer>';
+
+  function vHome() {
+    var online = CAT.filter(function (c) { return c.status === 'online'; });
+    var soon = CAT.filter(function (c) { return c.status === 'soon'; });
+    var nScope = 0, seen = {};
+    CAT.forEach(function (c) { seen[c.node.split('-')[0]] = 1; });
+    for (var k in seen) nScope++;
+    return '<section class="hero"><div class="hero-deco"></div><div class="hero-dots"></div>' +
+      '<svg class="flock" viewBox="0 0 520 240" fill="none" aria-hidden="true">' +
+        '<path d="M28 52c9-12 21-12 30 0 9-12 21-12 30 0" stroke="#ffffff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>' +
+        '<path d="M138 96c7-9 16-9 23 0 7-9 16-9 23 0" stroke="#ffffff" stroke-opacity=".34" stroke-width="1.7" stroke-linecap="round"/>' +
+        '<path d="M252 44c8-10 18-10 26 0 8-10 18-10 26 0" stroke="#ffffff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/>' +
+        '<path d="M356 112c6-7 13-7 19 0 6-7 13-7 19 0" stroke="#ffffff" stroke-opacity=".3" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M428 66c10-13 22-13 32 0 10-13 22-13 32 0" stroke="#ffffff" stroke-opacity=".46" stroke-width="2.1" stroke-linecap="round"/>' +
+        '<path d="M206 156c8-10 18-10 26 0 8-10 18-10 26 0" stroke="#b8e04e" stroke-opacity=".85" stroke-width="2" stroke-linecap="round"/>' +
+        '<path d="M330 178c5-7 12-7 17 0 5-7 12-7 17 0" stroke="#ffffff" stroke-opacity=".24" stroke-width="1.4" stroke-linecap="round"/>' +
+        '<path d="M96 186c6-8 14-8 20 0 6-8 14-8 20 0" stroke="#ffffff" stroke-opacity=".28" stroke-width="1.5" stroke-linecap="round"/>' +
+      '</svg>' +
+      '<div class="hero-inner">' +
+      '<p class="kicker">' + KBIRD + 'BIRDCANFLY · 破壳而出</p>' +
+      '<h1>让教材里的知识破壳,<br>变成可以亲手转动的模型</h1>' +
+      '<p class="lede">课本上的鸟不会飞,<em>但是这里的鸟可以。</em></p>' +
+      '<p class="hero-note">每个资源都是一个独立网页 —— 点开即用 · 免安装 · 免登录 · 支持离线使用</p>' +
+      '<div class="cta"><a class="btn solid" href="#/resources" data-scope="all">浏览资源柜</a>' +
+      (online[0] ? '<a class="btn ghost" href="' + online[0].url + '" target="_blank" rel="noopener">立即体验:' + online[0].title + '</a>' : '') +
+      '</div>' +
+      '<div class="stats">' +
+        '<div><strong>' + online.length + '</strong><span>在线资源</span></div>' +
+        '<div><strong>' + nScope + '</strong><span>覆盖教材册别</span></div>' +
+        '<div><strong>' + soon.length + '</strong><span>孵化中</span></div>' +
+      '</div></div></section>' +
+      (online.length ? '<section class="sec"><div class="sec-head"><h2>精选推荐</h2><a href="#/resources" data-scope="all">全部资源 →</a></div>' +
+      '<div class="grid">' + online.map(card).join('') + '</div></section>' : '') +
+      (soon.length ? '<section class="sec"><div class="sec-head"><h2>孵化中,敬请期待</h2></div>' +
+        '<div class="grid">' + soon.map(card).join('') + '</div></section>' : '') + FOOT;
+  }
+
+  function vResources() {
+    var node = scope === 'all' ? null : findNode(scope);
+    var list = CAT.filter(function (c) { return inScope(c.node, scope); });
+    var online = list.filter(function (c) { return c.status === 'online'; });
+    var soon = list.filter(function (c) { return c.status === 'soon'; });
+    var head = node
+      ? '<div><p class="crumb">' + node.crumb + '</p><h2>' + node.title + '</h2></div>'
+      : '<div><p class="crumb">北师大版 · 初中生物学</p><h2>全部资源</h2></div>';
+    return '<section class="sec" style="padding-top:36px">' +
+      '<div class="sec-head">' + head + '<span class="count">' + list.length + ' 项资源</span></div>' +
+      '<div class="chips">' + chipsHTML() + '</div>' +
+      (online.length ? '<div class="grid">' + online.map(card).join('') + '</div>'
+        : '<p class="empty">这个章节暂时没有已上线的资源' + (soon.length ? ',相关内容正在孵化中。' : ',敬请期待。') + '</p>') +
+      (soon.length ? '<h3 class="sub-h">孵化中</h3><div class="grid">' + soon.map(card).join('') + '</div>' : '') +
+      '</section>' + FOOT;
+  }
+
+  function route() {
+    var view = location.hash.indexOf('#/resources') === 0 ? 'resources' : 'home';
+    var navs = document.querySelectorAll('[data-nav]');
+    for (var i = 0; i < navs.length; i++) navs[i].classList.toggle('active', navs[i].getAttribute('data-nav') === view);
+    main.innerHTML = view === 'resources' ? vResources() : vHome();
+    refreshActive();
+    expandActivePath();
+    window.scrollTo(0, 0);
+    closeSidebar();
+  }
+
+  buildNav();
+  document.getElementById('navCount').textContent = CAT.filter(function (c) { return c.status === 'online'; }).length;
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-scope]');
+    if (b) {
+      scope = b.getAttribute('data-scope');
+      var inTree = scopeNav.contains(b);
+      if (location.hash.indexOf('#/resources') !== 0) location.hash = '#/resources';
+      else route();
+      if (!inTree) {
+        var row = scopeNav.querySelector('[data-scope="' + scope + '"]');
+        if (row && row.tagName === 'SUMMARY') row.parentElement.open = true;
+      }
+      closeSidebar();
+    }
+  });
+
+  /* 移动端菜单 */
+  var sidebar = document.getElementById('sidebar');
+  var backdrop = document.getElementById('backdrop');
+  document.getElementById('menuBtn').addEventListener('click', function () {
+    sidebar.classList.add('open');
+    backdrop.classList.add('show');
+  });
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+  }
+  backdrop.addEventListener('click', closeSidebar);
+
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+</body>
+</html>
