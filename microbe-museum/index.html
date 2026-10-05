@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微生物探究馆 · 细菌、真菌和病毒</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e1626;
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif}
+#wrap{position:fixed;inset:0;overflow:hidden;background:#0e1626}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;
+  background:linear-gradient(160deg,#f7f9fc 0%,#eef3f9 100%)}
+#inner{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:top left;transform:scale(1.25)}
+.screen{position:absolute;left:0;right:0;top:64px;bottom:0;display:none}
+.screen.on{display:block}
+
+/* ===== 顶栏 ===== */
+.topbar{height:64px;display:flex;align-items:center;padding:0 40px;gap:18px;background:#fff;
+  border-bottom:1px solid #e4eaf2}
+.logo{width:38px;height:38px;border-radius:10px;background:#185FA5;display:flex;align-items:center;justify-content:center}
+.topbar .t{font-size:21px;font-weight:600;color:#1c2b3a}
+.topbar .sub{font-size:13px;color:#7a8aa0}
+.nav{margin-left:auto;display:flex;gap:10px}
+.nav button{font-size:15px;padding:8px 18px;border-radius:999px;color:#5b6b80;background:#f0f4f9;
+  border:none;cursor:pointer;font-family:inherit}
+.nav button.on{background:#185FA5;color:#fff}
+#fullBtn{margin-left:8px;font-size:13px;padding:8px 14px;border-radius:999px;border:1px solid #dde5ef;
+  background:#fff;color:#5b6b80;cursor:pointer;font-family:inherit}
+
+/* ===== 首页 ===== */
+.home-hero{padding:52px 56px 0}
+.home-hero h1{font-size:54px;color:#152435;letter-spacing:2px}
+.home-hero h1 em{font-style:normal;color:#185FA5}
+.home-hero p{margin-top:12px;font-size:20px;color:#5b6b80}
+.home-cards{display:flex;gap:32px;padding:46px 56px}
+.hcard{flex:1;height:380px;border-radius:24px;padding:34px 32px;position:relative;color:#fff;
+  overflow:hidden;cursor:pointer;border:none;text-align:left;font-family:inherit;transition:transform .15s}
+.hcard:hover{transform:translateY(-4px)}
+.hcard.c1{background:linear-gradient(150deg,#0F6E56,#1D9E75)}
+.hcard.c2{background:linear-gradient(150deg,#0C447C,#378ADD)}
+.hcard .no{font-size:16px;opacity:.85}
+.hcard h2{font-size:38px;margin-top:8px;font-weight:600}
+.hcard .desc{font-size:17px;margin-top:14px;line-height:1.8;opacity:.95}
+.hcard .go{position:absolute;left:32px;bottom:28px;font-size:16px;background:rgba(255,255,255,.22);
+  padding:9px 22px;border-radius:999px}
+.hcard .deco{position:absolute;right:-30px;bottom:-30px;width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,.12)}
+
+/* ===== 分类树 ===== */
+.tree-root{display:flex;justify-content:center;padding-top:16px}
+.tree-root .root{background:#152435;color:#fff;font-size:18px;font-weight:600;padding:9px 32px;border-radius:14px}
+.tree-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;padding:10px 40px 0}
+.branch{border-radius:16px;padding:13px 16px 12px;border:1.5px solid}
+.branch.bacteria{background:#eefaf4;border-color:#9FE1CB}
+.branch.fungi{background:#eef5fd;border-color:#B5D4F4}
+.branch.virus{background:#f2f0fd;border-color:#CECBF6}
+.branch h3{font-size:19px}
+.branch.bacteria h3{color:#0F6E56}.branch.fungi h3{color:#185FA5}.branch.virus h3{color:#534AB7}
+.branch h3 small{font-size:12px;font-weight:400;color:#7a8aa0}
+.grp{margin-top:9px}
+.grp .gl{font-size:11.5px;color:#7a8aa0;margin-bottom:4px}
+.grp .gl.warn{color:#BA7517;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13.5px;font-weight:600;color:#24344a;background:#fff;border:1px solid #dfe6f0;
+  border-radius:9px;padding:6px 11px;cursor:default}
+.chip.trapd{background:#fdf6e8;border:1px dashed #EF9F27;color:#854F0B}
+
+/* 随堂小检测 */
+.check{margin:12px 40px 0;background:#fff;border:1px solid #e4eaf2;border-radius:16px;padding:12px 20px}
+.check .hd{display:flex;align-items:center;gap:14px}
+.check h3{font-size:16.5px;color:#24344a}
+.check .hint{font-size:12.5px;color:#7a8aa0}
+.check .items{display:flex;gap:26px;margin-top:10px}
+.ck-item{display:flex;align-items:center;gap:8px}
+.qchip{font-size:14.5px;font-weight:600;color:#24344a;background:#f0f4f9;border-radius:10px;
+  padding:9px 16px;white-space:nowrap}
+.qchip.trapd{background:#fdf6e8;border:1px dashed #EF9F27;color:#854F0B}
+.aopt{font-size:13.5px;padding:7px 13px;border-radius:999px;border:1.5px solid #dde5ef;background:#fbfcfe;
+  color:#5b6b80;cursor:pointer;font-family:inherit}
+.aopt.sel{border-color:#185FA5;background:#E6F1FB;color:#185FA5;font-weight:600}
+.aopt.ok{border-color:#1D9E75;background:#eefaf4;color:#0F6E56;font-weight:600}
+.aopt.bad{border-color:#E24B4A;background:#FCEBEB;color:#A32D2D;font-weight:600}
+.aopt.lock{cursor:default}
+.ck-why{font-size:12px;color:#0F6E56;margin-top:4px;display:none;line-height:1.5;max-width:330px}
+.ck-why.show{display:block}
+.btn{font-size:15px;font-weight:600;color:#fff;background:#185FA5;border:none;border-radius:12px;
+  padding:11px 30px;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.btn:hover{background:#0C447C}
+.btn.ghost{background:#fff;color:#185FA5;border:1.5px solid #185FA5}
+.btn.ghost:hover{background:#E6F1FB}
+.btn.amber{background:#EF9F27}
+.btn.amber:hover{background:#BA7517}
+.btn:disabled{background:#c3ccd8;cursor:not-allowed}
+
+/* ===== 对比台 ===== */
+.cmp-bar{display:flex;align-items:center;gap:14px;margin:14px 40px 0}
+.cmp-bar .hint{font-size:14.5px;color:#5b6b80}
+.cmp-bar .sp{flex:1}
+.legend{font-size:12.5px;color:#7a8aa0;white-space:nowrap;flex-shrink:0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}
+.cmp-grid{display:grid;grid-template-columns:140px 1fr 1fr 1fr;gap:9px;padding:12px 40px 0}
+.ch{font-size:16px;font-weight:600;padding:10px 8px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
+.ch.b{background:#1D9E75}.ch.f{background:#378ADD}.ch.v{background:#7F77DD}
+.dh{font-size:13.5px;color:#5b6b80;background:#eef2f8;border-radius:12px;display:flex;align-items:center;
+  padding:0 12px;font-weight:600;min-height:56px}
+.slot{min-height:56px;border-radius:12px;border:2px dashed #d5dfeb;background:#fbfcfe;display:flex;
+  align-items:center;justify-content:center;font-size:12px;color:#aab7c8;padding:5px;transition:border-color .15s,background .15s}
+.slot.filled{border-style:solid;border-color:#cfd9e6;background:#fff}
+.slot.over{border-color:#185FA5;background:#E6F1FB}
+.slot.ok{border-color:#1D9E75;background:#eefaf4}
+.slot.bad{border-color:#E24B4A;background:#FCEBEB;animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.term{font-size:13px;font-weight:600;padding:7px 12px;border-radius:10px;background:#eef2f8;
+  border:1.5px solid #dde5ef;color:#24344a;line-height:1.4;cursor:grab;user-select:none;touch-action:none}
+.slot .term{width:100%;text-align:center;background:#fff}
+.slot.ok .term{border-color:#1D9E75;color:#0F6E56}
+.slot.bad .term{border-color:#E24B4A;color:#A32D2D}
+.term.dragging{position:fixed;z-index:99;pointer-events:none;box-shadow:0 6px 18px rgba(20,40,70,.25);
+  background:#fff;transform:translate(-50%,-50%) scale(1.05)}
+.term.picked{outline:2px solid #185FA5;outline-offset:1px}
+.tray{margin:12px 40px 0;background:#fff;border:1px solid #e4eaf2;border-radius:16px;padding:12px 16px;min-height:96px}
+.tray .tt{font-size:13px;color:#7a8aa0;margin-bottom:8px}
+.tray .pool{display:flex;flex-wrap:wrap;gap:8px}
+.banner{margin:12px 40px 0;border-radius:14px;padding:14px 20px;font-size:17px;font-weight:600;
+  display:none;align-items:center;gap:10px}
+.banner.show{display:flex}
+.banner.win{background:#eefaf4;border:1.5px solid #1D9E75;color:#0F6E56}
+.banner.warn{background:#FCEBEB;border:1.5px solid #E24B4A;color:#A32D2D}
+.toast{position:absolute;left:50%;top:76px;transform:translateX(-50%);background:#152435;color:#fff;
+  font-size:14px;padding:10px 22px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.toast.show{opacity:.94}
+
+/* ===== 随堂小检测：拖拽分类 ===== */
+.cz-wrap{padding:18px 40px 0}
+.cz-pool{display:flex;flex-wrap:wrap;gap:10px;min-height:44px;align-items:center}
+.cz-card{font-size:16px;font-weight:600;padding:10px 17px;border-radius:12px;background:#eef2f8;
+  border:1.5px solid #dde5ef;color:#24344a;cursor:grab;user-select:none;touch-action:none;line-height:1.4}
+.cz-card.trapd{background:#fdf6e8;border:1px dashed #EF9F27;color:#854F0B}
+.cz-card.picked{outline:2px solid #185FA5;outline-offset:1px}
+.cz-card.ok{border-color:#1D9E75;background:#eefaf4;color:#0F6E56}
+.cz-card.bad{border-color:#E24B4A;background:#FCEBEB;color:#A32D2D;animation:shake .4s}
+.cz-card.dragging{position:fixed;z-index:99;pointer-events:none;background:#fff;
+  box-shadow:0 6px 18px rgba(20,40,70,.25);transform:translate(-50%,-50%) scale(1.05)}
+.cz-buckets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:16px}
+.cz-bucket{border-radius:16px;min-height:330px;padding:12px 12px;border:2px dashed #d5dfeb;
+  background:#fbfcfe;transition:border-color .15s,background .15s}
+.cz-bucket h4{font-size:18px;margin-bottom:10px;text-align:center}
+.cz-bucket.b1{border-color:#9FE1CB}.cz-bucket.b1 h4{color:#0F6E56}
+.cz-bucket.b2{border-color:#B5D4F4}.cz-bucket.b2 h4{color:#185FA5}
+.cz-bucket.b3{border-color:#CECBF6}.cz-bucket.b3 h4{color:#534AB7}
+.cz-bucket.over{border-color:#185FA5;background:#E6F1FB}
+.cz-zone{display:flex;flex-wrap:wrap;gap:6px;min-height:32px}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage"><div id="inner">
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="none" stroke="#fff" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="#fff"/></svg></div>
+  <span class="t">微生物探究馆</span><span class="sub">第12章 微生物与人的生活 · 第1节</span>
+  <div class="nav">
+    <button data-go="home" class="on">首页</button>
+    <button data-go="tree">分类挑战</button>
+    <button data-go="cmp">对比挑战</button>
+    <button id="fullBtn">全屏</button>
+  </div>
+</div>
+
+<!-- ============ 首页 ============ -->
+<div class="screen on" id="scr-home">
+  <div class="home-hero"><h1>走进<em>微生物</em>的世界</h1>
+    <p>个体微小 · 结构简单 —— 学会给微生物分类，彻底分清细菌、真菌和病毒</p></div>
+  <div class="home-cards">
+    <button class="hcard c1" data-go="tree"><div class="no">板块一</div><h2>分类挑战</h2>
+      <div class="desc">细菌 / 真菌 / 病毒三大分支<br>24 种常见微生物全员归归类<br>小心"名字里的陷阱"：乳酸菌、<br>醋酸菌、酵母菌、T4噬菌体</div>
+      <div class="go">开始挑战 →</div><div class="deco"></div></button>
+    <button class="hcard c2" data-go="cmp"><div class="no">板块二</div><h2>对比挑战</h2>
+      <div class="desc">词条拖拽配对：把 15 个词条<br>拖进 3 列 × 5 维度的空表<br>提交检测，对错一目了然<br>附完整答案总览</div>
+      <div class="go">开始挑战 →</div><div class="deco"></div></button>
+  </div>
+</div>
+
+<!-- ============ 分类挑战 ============ -->
+<div class="screen" id="scr-tree">
+  <div class="cmp-bar">
+    <span class="hint">把 24 种微生物全部拖进正确的家（可拖，也可先点卡片、再点分类框；选中后点卡片池放回），然后点"提交检测"</span>
+    <span class="sp"></span>
+    <span class="legend">已分类 <b id="czDone">0</b> / 24</span>
+    <button class="btn ghost" id="ckNew">重新挑战</button>
+    <button class="btn" id="ckSubmit">提交检测</button>
+  </div>
+  <div class="cz-wrap">
+    <div class="cz-pool" id="czPool"></div>
+    <div class="cz-buckets">
+      <div class="cz-bucket b1" data-cat="b"><h4>细菌</h4><div class="cz-zone"></div></div>
+      <div class="cz-bucket b2" data-cat="f"><h4>真菌</h4><div class="cz-zone"></div></div>
+      <div class="cz-bucket b3" data-cat="v"><h4>病毒</h4><div class="cz-zone"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 对比台 ============ -->
+<div class="screen" id="scr-cmp">
+  <div class="cmp-bar">
+    <span class="hint">把下方词条拖进表格对应的格子（也可先点词条、再点格子；选中词条后点词条池可放回），全部放好后点"提交检测"</span>
+    <span class="sp"></span>
+    <span class="legend"><i style="background:#1D9E75"></i>正确<i style="background:#E24B4A"></i>错误（弹回）</span>
+    <button class="btn ghost" id="cmpAnswer">显示答案</button>
+    <button class="btn ghost" id="cmpReset">重置</button>
+    <button class="btn" id="cmpSubmit">提交检测</button>
+  </div>
+  <div class="cmp-grid" id="cmpGrid"></div>
+  <div class="tray"><div class="tt">词条池（剩余 <span id="poolLeft">15</span> 个）：</div>
+    <div class="pool" id="pool"></div></div>
+  <div class="banner" id="cmpBanner"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div></div></div>
+
+<script>
+/* ================= 舞台缩放（contain 居中，非16:9留黑边不裁切） ================= */
+var stage=document.getElementById('stage');
+function fit(){
+  var s=Math.min(window.innerWidth/1600,window.innerHeight/900);
+  stage.style.transform='translate(-50%,-50%) scale('+s+')';
+}
+window.addEventListener('resize',fit);fit();
+
+document.getElementById('fullBtn').onclick=function(){
+  if(document.fullscreenElement){document.exitFullscreen()}
+  else{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+};
+
+/* ================= 导航 ================= */
+var screens={home:'scr-home',tree:'scr-tree',cmp:'scr-cmp'};
+function go(name){
+  Object.keys(screens).forEach(function(k){
+    document.getElementById(screens[k]).classList.toggle('on',k===name);
+  });
+  document.querySelectorAll('.nav button[data-go]').forEach(function(b){
+    b.classList.toggle('on',b.dataset.go===name);
+  });
+}
+document.querySelectorAll('[data-go]').forEach(function(el){
+  el.addEventListener('click',function(){go(el.dataset.go)});
+});
+
+/* ================= 提示条 ================= */
+var toastT=null;
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2200);
+}
+
+/* ================= 数据：24 种微生物 ================= */
+/* cat: b=细菌 f=真菌 v=病毒 */
+var MICROBES=[
+ {n:'大肠杆菌',cat:'b'},
+ {n:'金黄色葡萄球菌',cat:'b'},
+ {n:'幽门螺旋杆菌',cat:'b'},
+ {n:'破伤风杆菌',cat:'b'},
+ {n:'根瘤菌',cat:'b'},
+ {n:'乳酸菌',cat:'b',trap:1,why:'乳酸菌名字里没有"杆"，但它是杆状细菌（制酸奶、泡菜）'},
+ {n:'醋酸菌',cat:'b',trap:1,why:'醋酸菌名字里没有"杆"，但它是杆状细菌（酿醋）'},
+ {n:'甲烷菌',cat:'b',trap:1,why:'甲烷菌名字里没有形态字眼，但它是细菌（产生沼气）'},
+ {n:'酵母菌',cat:'f',trap:1,why:'酵母菌带"菌"字，但有真正的细胞核，是真菌（单细胞，出芽生殖）'},
+ {n:'青霉',cat:'f'},
+ {n:'曲霉',cat:'f'},
+ {n:'根霉',cat:'f'},
+ {n:'蘑菇',cat:'f'},
+ {n:'木耳',cat:'f'},
+ {n:'银耳',cat:'f'},
+ {n:'灵芝',cat:'f'},
+ {n:'流感病毒',cat:'v'},
+ {n:'新冠病毒',cat:'v'},
+ {n:'腺病毒',cat:'v'},
+ {n:'狂犬病病毒',cat:'v'},
+ {n:'口蹄疫病毒',cat:'v'},
+ {n:'艾滋病病毒',cat:'v'},
+ {n:'烟草花叶病毒',cat:'v'},
+ {n:'T4噬菌体',cat:'v',trap:1,why:'噬菌体带"菌"字，却是寄生在细菌体内、没有细胞结构的病毒'}
+];
+var CATNAME={b:'细菌',f:'真菌',v:'病毒'};
+
+/* ================= 随堂小检测：拖拽分类 ================= */
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var czCards=[];var czPick=null;
+function newCz(){
+  czCards=shuffle(MICROBES.slice()).map(function(m){return {m:m,where:'pool',mark:null}});
+  czPick=null;renderCz();
+}
+function renderCz(){
+  var pool=document.getElementById('czPool');pool.innerHTML='';
+  var done=0;
+  czCards.forEach(function(c,i){if(c.where==='pool'){pool.appendChild(makeCzCard(c,i))}else{done++}});
+  document.querySelectorAll('.cz-bucket').forEach(function(bk){
+    var zone=bk.querySelector('.cz-zone');zone.innerHTML='';
+    czCards.forEach(function(c,i){if(c.where===bk.dataset.cat)zone.appendChild(makeCzCard(c,i))});
+  });
+  document.getElementById('czDone').textContent=done;
+}
+function makeCzCard(c,i){
+  var el=document.createElement('span');
+  el.className='cz-card'+(c.m.trap?' trapd':'')+(c.mark?' '+c.mark:'')+(czPick===i?' picked':'');
+  el.textContent=c.m.n;el.dataset.i=i;
+  el.addEventListener('click',function(e){
+    if(justDragged)return;
+    e.stopPropagation();
+    czPick=(czPick===i)?null:i;
+    renderCz();
+  });
+  attachCzDrag(el,i);
+  return el;
+}
+function hitBucket(x,y){
+  var bs=document.querySelectorAll('.cz-bucket');
+  for(var i=0;i<bs.length;i++){
+    var r=bs[i].getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return bs[i];
+  }
+  return null;
+}
+function attachCzDrag(el,i){
+  el.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    var c=czCards[i];
+    var startX=e.clientX,startY=e.clientY,moved=false,ghost=null;
+    function onMove(ev){
+      if(!moved&&Math.abs(ev.clientX-startX)+Math.abs(ev.clientY-startY)<8)return;
+      if(!ghost){
+        moved=true;czPick=null;
+        ghost=document.createElement('span');
+        ghost.className='cz-card dragging';ghost.textContent=c.m.n;
+        document.getElementById('stage').appendChild(ghost);
+        el.style.opacity='.35';
+      }
+      var sc=Math.min(window.innerWidth/1600,window.innerHeight/900);
+      ghost.style.left=((ev.clientX-window.innerWidth/2)/sc+800)+'px';
+      ghost.style.top=((ev.clientY-window.innerHeight/2)/sc+450)+'px';
+      document.querySelectorAll('.cz-bucket').forEach(function(b){b.classList.remove('over')});
+      var hit=hitBucket(ev.clientX,ev.clientY);
+      if(hit)hit.classList.add('over');
+    }
+    function onUp(ev){
+      document.removeEventListener('pointermove',onMove);
+      document.removeEventListener('pointerup',onUp);
+      if(ghost){ghost.remove();el.style.opacity=''}
+      document.querySelectorAll('.cz-bucket').forEach(function(b){b.classList.remove('over')});
+      if(!moved)return;
+      justDragged=true;setTimeout(function(){justDragged=false},50);
+      var hit=hitBucket(ev.clientX,ev.clientY);
+      if(hit){c.where=hit.dataset.cat;c.mark=null;renderCz()}
+      else{
+        var r=document.getElementById('czPool').getBoundingClientRect();
+        if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom){
+          c.where='pool';c.mark=null;renderCz();
+        }
+      }
+    }
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onUp);
+  });
+}
+document.querySelectorAll('.cz-bucket').forEach(function(bk){
+  bk.addEventListener('click',function(){
+    if(czPick==null)return;
+    czCards[czPick].where=bk.dataset.cat;
+    czCards[czPick].mark=null;
+    czPick=null;renderCz();
+  });
+});
+document.getElementById('czPool').addEventListener('click',function(){
+  if(czPick!=null){czCards[czPick].where='pool';czCards[czPick].mark=null;czPick=null;renderCz()}
+});
+document.getElementById('ckNew').onclick=function(){newCz()};
+document.getElementById('ckSubmit').onclick=function(){
+  var un=czCards.filter(function(c){return c.where==='pool'});
+  if(un.length){toast('还有 '+un.length+' 张卡片没有分类，全部放完再提交');return}
+  var wrong=czCards.filter(function(c){return c.where!==c.m.cat});
+  czCards.forEach(function(c){c.mark=(c.where===c.m.cat)?'ok':'bad'});
+  renderCz();
+  if(!wrong.length){
+    toast('全部正确！名字判断不了，要看细胞结构');
+  }else{
+    toast('有 '+wrong.length+' 张放错了（红色），即将弹回');
+    setTimeout(function(){
+      wrong.forEach(function(c){c.where='pool';c.mark=null});
+      renderCz();
+      var w0=wrong[0].m;
+      toast('提示：'+(w0.why||(w0.n+'属于'+CATNAME[w0.cat])));
+    },1500);
+  }
+};
+newCz();
+
+/* ================= 对比台数据 ================= */
+var DIMS=['细胞结构','细胞核','形态','大小 / 观察工具','繁殖方式'];
+var TERMS=[
+ {id:1, dim:0,col:'b',t:'有细胞结构（单细胞）'},
+ {id:2, dim:0,col:'f',t:'有细胞结构（单细胞或多细胞）'},
+ {id:3, dim:0,col:'v',t:'没有细胞结构（蛋白质外壳 + 遗传物质）'},
+ {id:4, dim:1,col:'b',t:'没有成形的细胞核（原核生物）'},
+ {id:5, dim:1,col:'f',t:'有真正的细胞核（真核生物）'},
+ {id:6, dim:1,col:'v',t:'无细胞，谈不上细胞核'},
+ {id:7, dim:2,col:'b',t:'球状、杆状、螺旋状'},
+ {id:8, dim:2,col:'f',t:'卵圆形（酵母菌）、丝状（霉菌菌丝）'},
+ {id:9, dim:2,col:'v',t:'球状、杆状、蝌蚪状等'},
+ {id:10,dim:3,col:'b',t:'微小，光学 / 电子显微镜观察'},
+ {id:11,dim:3,col:'f',t:'酵母菌、霉菌用光学显微镜，蘑菇肉眼可见'},
+ {id:12,dim:3,col:'v',t:'非常微小，只能用电子显微镜观察'},
+ {id:13,dim:4,col:'b',t:'分裂生殖'},
+ {id:14,dim:4,col:'f',t:'出芽生殖（酵母菌）、孢子生殖（霉菌、蘑菇）'},
+ {id:15,dim:4,col:'v',t:'寄生在活细胞内，复制增殖'}
+];
+var COLS=[{c:'b',cls:'b',n:'细菌'},{c:'f',cls:'f',n:'真菌'},{c:'v',cls:'v',n:'病毒'}];
+var placement={}; /* slotKey 'dim-col' -> termId */
+var termEls={};   /* id -> element */
+
+(function buildCmp(){
+  var grid=document.getElementById('cmpGrid');
+  var html='<div></div>'+COLS.map(function(c){return '<div class="ch '+c.cls+'">'+c.n+'</div>'}).join('');
+  DIMS.forEach(function(d,di){
+    html+='<div class="dh">'+d+'</div>';
+    COLS.forEach(function(c){
+      html+='<div class="slot" data-slot="'+di+'-'+c.c+'">拖到这里</div>';
+    });
+  });
+  grid.innerHTML=html;
+})();
+
+function renderPool(){
+  var pool=document.getElementById('pool');
+  pool.innerHTML='';
+  var placedIds={};
+  Object.keys(placement).forEach(function(k){placedIds[placement[k]]=1});
+  var left=0;
+  shuffle(TERMS.slice()).forEach(function(tm){
+    if(placedIds[tm.id])return;
+    left++;
+    pool.appendChild(makeTermEl(tm));
+  });
+  document.getElementById('poolLeft').textContent=left;
+}
+function makeTermEl(tm){
+  var el=document.createElement('span');
+  el.className='term';el.textContent=tm.t;el.dataset.id=tm.id;
+  termEls[tm.id]=el;
+  attachDrag(el);
+  el.addEventListener('click',function(e){
+    if(justDragged||el.classList.contains('lock'))return;
+    e.stopPropagation();
+    if(pickedEl&&pickedEl!==el){
+      /* 已选中词条时点击另一词条：放入该词条所在槽位（自动交换） */
+      var targetKey=findSlotOf(+el.dataset.id);
+      if(targetKey){
+        var tm=TERMS.find(function(t){return t.id==pickedEl.dataset.id});
+        unpick();
+        placeTerm(targetKey,tm);
+      }else{
+        pickTerm(el);
+      }
+      return;
+    }
+    pickTerm(el);
+  });
+  return el;
+}
+function slotEl(key){return document.querySelector('.slot[data-slot="'+key+'"]')}
+function clearMarks(){
+  document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('ok','bad')});
+  hideBanner();
+}
+/* 状态驱动渲染：DOM 永远跟 placement 数据走，杜绝残留/重复 */
+function renderSlots(){
+  document.querySelectorAll('.slot').forEach(function(s){
+    var key=s.dataset.slot;
+    var id=placement[key];
+    if(id){
+      var tm=TERMS.find(function(t){return t.id===id});
+      s.classList.add('filled');
+      s.innerHTML='';
+      s.appendChild(makeTermEl(tm));
+    }else{
+      s.classList.remove('filled','ok','bad');
+      s.textContent='拖到这里';
+    }
+  });
+}
+function placeTerm(key,tm){
+  var from=findSlotOf(tm.id);
+  if(from===key)return;
+  if(from)delete placement[from];
+  if(placement[key]!==undefined&&from){
+    /* 槽位已被占：交换——原词条去来源槽 */
+    placement[from]=placement[key];
+  }
+  placement[key]=tm.id;
+  clearMarks();renderSlots();renderPool();
+}
+function removeTerm(key){
+  delete placement[key];
+  clearMarks();renderSlots();renderPool();
+}
+document.querySelectorAll('.slot').forEach(function(s){
+  s.addEventListener('click',function(){
+    if(s.querySelector('.term.lock'))return; /* 答案总览模式不可动 */
+    var key=s.dataset.slot;
+    if(pickedEl){
+      var tm=TERMS.find(function(t){return t.id==pickedEl.dataset.id});
+      unpick();
+      placeTerm(key,tm);
+    }else if(placement[key]){
+      removeTerm(key);
+    }
+  });
+});
+document.querySelector('.tray').addEventListener('click',function(){
+  if(!pickedEl)return;
+  var id=+pickedEl.dataset.id;
+  var from=findSlotOf(id);
+  unpick();
+  if(from)removeTerm(from);
+});
+function findSlotOf(id){
+  var ks=Object.keys(placement);
+  for(var i=0;i<ks.length;i++)if(placement[ks[i]]==id)return ks[i];
+  return null;
+}
+
+/* ---- 点选模式 ---- */
+var pickedEl=null;
+function pickTerm(el){
+  if(pickedEl===el){unpick();return}
+  unpick();
+  pickedEl=el;el.classList.add('picked');
+}
+function unpick(){if(pickedEl){pickedEl.classList.remove('picked');pickedEl=null}}
+
+/* ---- 拖拽模式（pointer 事件，鼠标/触屏通用） ---- */
+var justDragged=false;
+function attachDrag(el){
+  el.addEventListener('pointerdown',function(e){
+    if(el.classList.contains('lock'))return;
+    e.preventDefault();
+    var id=+el.dataset.id;
+    var tm=TERMS.find(function(t){return t.id===id});
+    var startX=e.clientX,startY=e.clientY,moved=false;
+    var ghost=null;
+    function onMove(ev){
+      if(!moved&&Math.abs(ev.clientX-startX)+Math.abs(ev.clientY-startY)<8)return;
+      if(!ghost){
+        moved=true;unpick();
+        ghost=document.createElement('span');
+        ghost.className='term dragging';ghost.textContent=tm.t;
+        document.getElementById('stage').appendChild(ghost);
+        el.style.opacity='.35';
+      }
+      var sc=Math.min(window.innerWidth/1600,window.innerHeight/900);
+      ghost.style.left=((ev.clientX-window.innerWidth/2)/sc+800)+'px';
+      ghost.style.top=((ev.clientY-window.innerHeight/2)/sc+450)+'px';
+      document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('over')});
+      var hit=hitSlot(ev.clientX,ev.clientY);
+      if(hit)hit.classList.add('over');
+    }
+    function onUp(ev){
+      document.removeEventListener('pointermove',onMove);
+      document.removeEventListener('pointerup',onUp);
+      if(ghost){ghost.remove();el.style.opacity=''}
+      document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('over')});
+      if(!moved)return;
+      justDragged=true;setTimeout(function(){justDragged=false},50);
+      var hit=hitSlot(ev.clientX,ev.clientY);
+      if(hit){
+        placeTerm(hit.dataset.slot,tm);
+      }else{
+        /* 拖回词条池区域：从槽位移除 */
+        var fromKey=findSlotOf(id);
+        if(fromKey){
+          var r=document.querySelector('.tray').getBoundingClientRect();
+          if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom){
+            removeTerm(fromKey);
+          }
+        }
+      }
+    }
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onUp);
+  });
+}
+function hitSlot(x,y){
+  var slots=document.querySelectorAll('.slot');
+  for(var i=0;i<slots.length;i++){
+    var r=slots[i].getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return slots[i];
+  }
+  return null;
+}
+
+/* ---- 提交 / 重置 / 答案 ---- */
+function hideBanner(){var b=document.getElementById('cmpBanner');b.className='banner';b.innerHTML=''}
+document.getElementById('cmpSubmit').onclick=function(){
+  var keys=[];
+  DIMS.forEach(function(_,di){COLS.forEach(function(c){keys.push(di+'-'+c.c)})});
+  var filled=keys.every(function(k){return placement[k]});
+  if(!filled){toast('还有空格没有放词条，全部放满再提交');return}
+  var wrongKeys=[];
+  keys.forEach(function(k){
+    var parts=k.split('-'),di=+parts[0],col=parts[1];
+    var tm=TERMS.find(function(t){return t.id===placement[k]});
+    var ok=(tm.dim===di&&tm.col===col);
+    slotEl(k).classList.add(ok?'ok':'bad');
+    if(!ok)wrongKeys.push(k);
+  });
+  var b=document.getElementById('cmpBanner');
+  if(wrongKeys.length===0){
+    b.className='banner show win';
+    b.innerHTML='🎉 全部配对正确！记住这三句：病毒没有细胞结构；细菌没有成形的细胞核（原核）；真菌有真正的细胞核（真核）。';
+  }else{
+    b.className='banner show warn';
+    b.innerHTML='有 '+wrongKeys.length+' 个格子放错了（红色），词条即将弹回词条池，请调整后重新提交。';
+    setTimeout(function(){
+      wrongKeys.forEach(function(k){removeTerm(k)});
+      hideBanner();
+    },1400);
+  }
+};
+document.getElementById('cmpReset').onclick=function(){
+  placement={};
+  renderSlots();
+  hideBanner();renderPool();
+  toast('已重置，词条全部回到词条池');
+};
+var answerOn=false;
+document.getElementById('cmpAnswer').onclick=function(){
+  answerOn=!answerOn;
+  this.textContent=answerOn?'继续挑战':'显示答案';
+  if(answerOn){
+    placement={};
+    TERMS.forEach(function(tm){placement[tm.dim+'-'+tm.col]=tm.id});
+    renderSlots();renderPool();
+    document.querySelectorAll('.slot').forEach(function(s){s.classList.add('ok')});
+    document.querySelectorAll('.slot .term').forEach(function(el){el.classList.add('lock')});
+    hideBanner();
+    document.getElementById('cmpBanner').className='banner show win';
+    document.getElementById('cmpBanner').innerHTML='答案总览：病毒没有细胞结构；细菌没有成形的细胞核（原核生物）；真菌有真正的细胞核（真核生物）。点"继续挑战"回到拖拽模式。';
+  }else{
+    document.getElementById('cmpReset').onclick();
+  }
+};
+renderPool();
+</script>
+</body>
+</html>

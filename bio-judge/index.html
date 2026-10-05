@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>判断生物与非生物 · 16:9 教学版</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:#0f1210;}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:#1f2320;}
+
+.stage-wrap{position:fixed;inset:0;overflow:hidden;background:#0f1210;}
+
+.stage{
+  width:1600px;height:900px;position:absolute;left:50%;top:50%;
+  background:#f6f7f5;overflow:hidden;transform-origin:center center;
+  font-size:14px;line-height:1.6;
+}
+.stage-inner{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:top left;transform:scale(1.25);overflow:hidden}
+
+/* Header */
+.header{position:absolute;left:0;right:0;top:0;height:80px;display:flex;align-items:center;gap:14px;padding:0 24px;background:#fff;border-bottom:1px solid #e2e4e0;z-index:5;}
+.chapter{font-size:12.5px;color:#4a524a;font-weight:600;letter-spacing:.5px;margin-bottom:2px}
+.title{font-size:20px;font-weight:500;}
+.subtitle{font-size:12px;color:#5f665e;margin-left:8px}
+.spacer{flex:1;}
+.modes{display:flex;background:#f6f7f5;border:1px solid #e2e4e0;border-radius:8px;padding:2px;}
+.modes button{border:0;background:transparent;padding:5px 12px;font:inherit;font-size:12px;color:#5f665e;cursor:pointer;border-radius:6px;}
+.modes button.active{background:#1f2320;color:#fff;}
+.btn{border:1px solid #c9ccc6;background:#fff;color:#1f2320;font:inherit;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;}
+.btn:hover{border-color:#5f665e;}
+.btn.primary{background:#1f2320;color:#fff;border-color:#1f2320;}
+.btn.primary:hover{background:#3a3f3a;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.stat{font-size:12px;color:#5f665e;display:flex;align-items:center;gap:6px;}
+.stat b{color:#1f2320;font-weight:500;font-size:14px;}
+.bar{width:120px;height:5px;background:#e2e4e0;border-radius:99px;overflow:hidden;}
+.bar i{display:block;height:100%;width:0;background:#639922;transition:width .25s;}
+
+/* Pool */
+.pool{position:absolute;left:24px;right:24px;top:98px;height:268px;background:#fff;border:1.5px dashed #c9ccc6;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;}
+.pool-title{font-size:12px;color:#5f665e;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.pool-title .tag{padding:2px 8px;background:#eaf3de;color:#3b6d11;border-radius:99px;font-size:11px;font-weight:500;}
+.pool-title .tag2{padding:2px 8px;background:#e6f1fb;color:#0c447c;border-radius:99px;font-size:11px;font-weight:500;}
+.pool-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:10px;}
+
+/* Zones */
+.zones{position:absolute;left:24px;right:24px;bottom:20px;top:382px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.zone{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;min-height:0;}
+.zone.live{background:#eaf3de;border:1px solid #c0dd97;}
+.zone.non{background:#e6f1fb;border:1px solid #b5d4f4;}
+.zone h2{margin:0 0 4px;font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px;}
+.zone.live h2{color:#3b6d11;}
+.zone.non h2{color:#0c447c;}
+.zone .count{margin-left:auto;font-size:12px;font-weight:400;color:#5f665e;}
+.zone .desc{font-size:12px;color:#5f665e;margin:0 0 8px;}
+.drop{flex:1;min-height:0;border-radius:10px;border:1.5px dashed #c9ccc6;background:rgba(255,255,255,.55);padding:8px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:8px;overflow:hidden;}
+.zone.live .drop{border-color:#c0dd97;}
+.zone.non .drop{border-color:#b5d4f4;}
+.zone.hover{outline:2.5px solid #1f2320;outline-offset:-2px;}
+
+/* Tile (image card) */
+.tile{position:relative;min-width:0;min-height:0;border-radius:8px;overflow:hidden;background:#fff;border:1.5px solid #c9ccc6;cursor:grab;user-select:none;touch-action:none;transition:transform .15s,box-shadow .15s,border-color .15s;}
+.tile:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.08);}
+.tile.locked{cursor:default;}
+.tile.locked:hover{transform:none;box-shadow:none;}
+.tile.selected{box-shadow:0 0 0 2.5px #1f2320,0 6px 14px rgba(0,0,0,.1);}
+.tile img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;background:#eef0ec;}
+.tile .label{position:absolute;left:0;right:0;bottom:0;padding:5px 7px 4px;font-size:12px;color:#fff;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,.5);background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.78) 80%);}
+.tile.ok{border-color:#639922;}
+.tile.no{border-color:#185fa5;}
+.tile.wrong{animation:shake .38s ease;border-color:#a32d2d;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+.tile.dragging{opacity:.25;transform:none;box-shadow:none;}
+.tile-ghost{position:fixed;z-index:999;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.25);transform:rotate(-1.5deg);border-radius:8px;overflow:hidden;}
+
+/* Review screen */
+.review{position:absolute;inset:0;background:#f6f7f5;display:none;z-index:50;}
+.review.show{display:flex;}
+.review-inner{flex:1;display:grid;grid-template-columns:1.05fr 1fr;min-height:0;}
+.review-img{position:relative;background:#0f1210;display:flex;align-items:center;justify-content:center;padding:30px;min-height:0;}
+.review-img img{max-width:100%;max-height:100%;object-fit:contain;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.review-img .badge{position:absolute;top:24px;left:24px;padding:6px 14px;border-radius:99px;font-size:13px;color:#fff;letter-spacing:.5px;}
+.badge.live{background:#3b6d11;}
+.badge.non{background:#0c447c;}
+.review-close{position:absolute;top:24px;right:24px;}
+.review-body{padding:28px 36px;display:flex;flex-direction:column;min-height:0;overflow:auto;}
+.review-body h3{margin:0 0 4px;font-size:26px;font-weight:500;}
+.review-body .summary{font-size:13px;color:#5f665e;margin-bottom:18px;line-height:1.6;}
+.dim-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:12px;flex:1;min-height:0;}
+.dim{background:#fff;border:1px solid #e2e4e0;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;min-height:0;}
+.dim .mark{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;margin-bottom:8px;flex-shrink:0;}
+.dim .mark.y{background:#639922;}
+.dim .mark.n{background:#c9ccc6;color:#888;}
+.dim .title{font-size:13px;font-weight:500;color:#1f2320;margin-bottom:4px;}
+.dim .note{font-size:12px;color:#5f665e;line-height:1.5;}
+.review-footer{display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid #e2e4e0;margin-top:14px;}
+.review-footer .progress{flex:1;height:5px;background:#e2e4e0;border-radius:99px;overflow:hidden;}
+.review-footer .progress i{display:block;height:100%;background:#1f2320;transition:width .2s;}
+.review-footer .step{font-size:12px;color:#5f665e;min-width:88px;text-align:right;}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);background:#1f2320;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:1500;font-size:13px;}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+/* Success */
+.overlay{position:fixed;inset:0;background:rgba(15,18,16,.5);display:none;align-items:center;justify-content:center;z-index:2000;}
+.overlay.show{display:flex;}
+.panel{background:#fff;border-radius:18px;padding:30px 36px;text-align:center;max-width:380px;width:90%;}
+.panel .check{width:56px;height:56px;border-radius:50%;border:2px solid #639922;background:#eaf3de;margin:0 auto 14px;position:relative;}
+.panel .check::after{content:"";position:absolute;left:19px;top:14px;width:14px;height:24px;border-right:3px solid #639922;border-bottom:3px solid #639922;transform:rotate(42deg);}
+.panel h3{margin:0 0 4px;font-size:20px;font-weight:500;}
+.panel p{margin:0 0 14px;font-size:13px;color:#5f665e;}
+.panel .meta{font-size:12px;color:#5f665e;margin-bottom:20px;}
+.panel .meta b{color:#1f2320;font-weight:500;}
+.panel .row{display:flex;gap:10px;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="stage-wrap"><div class="stage" id="stage"><div class="stage-inner">
+
+  <header class="header">
+    <div>
+      <div class="chapter">七年级上册 · 第1章 认识生物和生物学 · 第1节 形形色色的生物</div>
+      <div class="title">判断生物与非生物<span class="subtitle">（拖动图片到对应区域，全部正确即可进入讲评）</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="modes">
+      <button id="m-practice" class="active" data-mode="practice">练习模式</button>
+      <button id="m-challenge" data-mode="challenge">挑战模式</button>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="stat">已正确分类 <b id="score">0</b> / <span id="total">18</span></div>
+    <button class="btn" id="reset">重新开始</button>
+    <button class="btn primary" id="submit">提交认证</button>
+    <button class="btn" id="full" title="按 F 键也可切换">全屏显示 (F)</button>
+  </header>
+
+  <div class="pool">
+    <div class="pool-title">
+      <span>请将下列图片拖入对应区域</span>
+      <span class="tag">生物 10</span>
+      <span class="tag2">非生物 8</span>
+    </div>
+    <div class="pool-grid" id="pool"></div>
+  </div>
+
+  <div class="zones">
+    <div class="zone live" data-answer="true">
+      <h2>生物<span class="count" id="count-true">0 张</span></h2>
+      <p class="desc">具有生命：能进行新陈代谢、生长繁殖，对外界刺激作出反应，由细胞构成</p>
+      <div class="drop" id="drop-true"></div>
+    </div>
+    <div class="zone non" data-answer="false">
+      <h2>非生物<span class="count" id="count-false">0 张</span></h2>
+      <p class="desc">没有生命：不具备细胞结构，不能独立代谢与繁殖</p>
+      <div class="drop" id="drop-false"></div>
+    </div>
+  </div>
+
+  <div class="review" id="review">
+    <div class="review-inner">
+      <div class="review-img">
+        <img id="rv-img" alt="">
+        <div class="badge" id="rv-badge"></div>
+        <button class="btn review-close" id="rv-exit">退出讲评</button>
+      </div>
+      <div class="review-body">
+        <h3 id="rv-name"></h3>
+        <div class="summary" id="rv-summary"></div>
+        <div class="dim-grid" id="rv-dims"></div>
+        <div class="review-footer">
+          <button class="btn" id="rv-prev">上一项</button>
+          <div class="progress"><i id="rv-bar"></i></div>
+          <div class="step" id="rv-step"></div>
+          <button class="btn primary" id="rv-next">下一项</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div></div></div>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div class="panel">
+  <div class="check"></div>
+  <h3 id="ov-title">认证成功</h3>
+  <p id="ov-sub">全部 18 项判断正确</p>
+  <div class="meta" id="ov-meta"></div>
+  <div class="row">
+    <button class="btn primary" id="ov-review">开始讲评</button>
+    <button class="btn" id="ov-again">再来一次</button>
+  </div>
+</div></div>
+
+<script>
+const DIMS = [
+  { key:'yingji',   title:'应激性' },
+  { key:'shengzhang', title:'生长' },
+  { key:'fanyu',     title:'繁殖' },
+  { key:'xcdx',      title:'新陈代谢' },
+  { key:'ycby',      title:'遗传和变异' },
+  { key:'xibao',     title:'基本都由细胞构成' }
+];
+
+const ITEMS = [
+  { name:'生石花',         img:'images/01-shengshihua.png',      answer:true, summary:'多肉植物，外形酷似鹅卵石，开花时从两叶间抽出黄色花朵', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'向光性，气孔昼闭夜开',
+      shengzhang_n:'每年蜕皮长大、形成新叶',
+      fanyu_n:'秋末开花结籽，也可分头',
+      xcdx_n:'CAM 光合作用，呼吸作用',
+      ycby_n:'花纹、颜色由基因决定',
+      xibao_n:'植物细胞，有叶绿体、液泡'
+  }},
+  { name:'珊瑚虫',         img:'images/02-shanhuchong.png',      answer:true, summary:'腔肠动物，水螅体伸出羽状触手捕食浮游生物', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'触手遇刺激缩回',
+      shengzhang_n:'个体长大、群体扩展',
+      fanyu_n:'出芽生殖与有性生殖',
+      xcdx_n:'捕食浮游生物获取能量',
+      ycby_n:'不同种形态差异显著',
+      xibao_n:'动物细胞，无细胞壁'
+  }},
+  { name:'海带',           img:'images/03-haidai.png',            answer:true, summary:'褐藻，长带状藻体，附着海底岩石生长', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'叶片随水流舒展',
+      shengzhang_n:'叶柄基部持续伸长',
+      fanyu_n:'释放孢子、配子结合',
+      xcdx_n:'光合作用吸收 CO2',
+      ycby_n:'孢子遗传重组有变异',
+      xibao_n:'藻类细胞，有叶绿体'
+  }},
+  { name:'苔藓',           img:'images/04-taixian.png',           answer:true, summary:'最原始的高等植物，以孢子繁殖，常见于阴湿环境', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'孢蒴遇干燥即开裂释孢',
+      shengzhang_n:'假根向基质延伸',
+      fanyu_n:'靠孢子繁殖',
+      xcdx_n:'光合作用',
+      ycby_n:'孢子有遗传重组',
+      xibao_n:'植物细胞，结构原始'
+  }},
+  { name:'香菇',           img:'images/05-xianggu.png',           answer:true, summary:'大型真菌，腐生在朽木上，菌盖开裂露出菌褶', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'向化性、菌丝趋养分',
+      shengzhang_n:'菌丝扩展、子实体长大',
+      fanyu_n:'产生大量担孢子',
+      xcdx_n:'异养，分解木质素',
+      ycby_n:'不同菌株有基因差异',
+      xibao_n:'真菌细胞，有细胞壁'
+  }},
+  { name:'干酵母粉',       img:'images/06-ganjiaomu.png',         answer:true, summary:'脱水的酵母细胞，处于休眠状态，遇水可激活', dims:{
+      yingji:true,   shengzhang:false, fanyu:false, xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'遇适宜水分即激活并发酵',
+      shengzhang_n:'休眠期无可观察生长',
+      fanyu_n:'休眠期不分裂繁殖',
+      xcdx_n:'极低水平呼吸维持生命',
+      ycby_n:'基因稳定可遗传',
+      xibao_n:'单细胞真菌，活细胞'
+  }},
+  { name:'干燥的菜豆种子', img:'images/07-caidouzhongzi.png',     answer:true, summary:'休眠中的菜豆种子，条件适宜可萌发成新植株', dims:{
+      yingji:true,   shengzhang:false, fanyu:false, xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'吸水膨胀，对温度敏感',
+      shengzhang_n:'休眠期不生长',
+      fanyu_n:'休眠期不繁殖',
+      xcdx_n:'极微弱呼吸',
+      ycby_n:'DNA 完整，子代性状有差异',
+      xibao_n:'胚细胞，结构完整'
+  }},
+  { name:'冬眠的青蛙',     img:'images/08-qingwa.png',            answer:true, summary:'两栖动物冬眠时新陈代谢极低，但仍维持生命', dims:{
+      yingji:true,   shengzhang:false, fanyu:false, xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'强刺激下可缓慢苏醒',
+      shengzhang_n:'冬眠期不生长',
+      fanyu_n:'冬眠期不繁殖',
+      xcdx_n:'极低水平维持',
+      ycby_n:'基因稳定可遗传',
+      xibao_n:'完整动物体细胞'
+  }},
+  { name:'变形虫',         img:'images/09-bianxingchong.png',     answer:true, summary:'单细胞真核生物，伸出伪足运动和摄食', dims:{
+      yingji:true,   shengzhang:true, fanyu:true,   xcdx:true,  ycby:true,  xibao:true,
+      yingji_n:'趋利避害的伪足运动',
+      shengzhang_n:'细胞长大再分裂',
+      fanyu_n:'分裂生殖',
+      xcdx_n:'摄取食物并消化',
+      ycby_n:'DNA 复制有变异',
+      xibao_n:'单细胞真核生物'
+  }},
+  { name:'鹅卵石',         img:'images/10-eluanshi.png',          answer:false, summary:'天然形成的圆滑石块，由水流长期冲刷而成', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'无任何应激反应',
+      shengzhang_n:'体积不会因代谢增大',
+      fanyu_n:'不能产生后代',
+      xcdx_n:'不进行新陈代谢',
+      ycby_n:'无遗传物质',
+      xibao_n:'无机矿物，无细胞'
+  }},
+  { name:'流感病毒',       img:'images/11-liuganbingdu.png',      answer:true, summary:'虽无细胞结构和独立代谢，但能在宿主细胞内增殖并发生遗传与变异，本活动按教科书口径归为生物', dims:{
+      yingji:false,  shengzhang:false, fanyu:true,   xcdx:false, ycby:true,  xibao:false,
+      yingji_n:'无独立应激能力',
+      shengzhang_n:'不生长',
+      fanyu_n:'依赖宿主细胞进行复制增殖',
+      xcdx_n:'无独立代谢',
+      ycby_n:'RNA 复制有突变与重组',
+      xibao_n:'无细胞结构，但具有遗传物质'
+  }},
+  { name:'珊瑚礁',         img:'images/12-shanhujiao.png',        answer:false, summary:'珊瑚虫分泌的石灰质骨骼长期堆积形成', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'对刺激无反应',
+      shengzhang_n:'体积不增不减',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'无遗传物质',
+      xibao_n:'碳酸钙堆积，无细胞'
+  }},
+  { name:'钟乳石',         img:'images/13-zhongrushi.png',        answer:false, summary:'溶洞中碳酸钙长期沉积形成，会"长大"但不是生物', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'对刺激无反应',
+      shengzhang_n:'"长大"是沉积不是细胞分裂',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'无遗传物质',
+      xibao_n:'碳酸钙矿物，无细胞'
+  }},
+  { name:'扫地机器人',     img:'images/14-saodijiqiren.png',      answer:false, summary:'会动会避障，但只是按程序运行的电子设备', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'按程序响应，非生命应激',
+      shengzhang_n:'体积不增',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'耗电但不代谢',
+      ycby_n:'无遗传物质',
+      xibao_n:'金属塑料，无细胞'
+  }},
+  { name:'电脑病毒',       img:'images/15-diannaobingdu.png',     answer:false, summary:'一段可自我复制的程序代码，本质是数据', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'无反应能力',
+      shengzhang_n:'不生长',
+      fanyu_n:'复制文件非繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'代码有变种但非生命变异',
+      xibao_n:'无任何物质实体'
+  }},
+  { name:'恐龙化石',       img:'images/16-konglonghuashi.png',    answer:false, summary:'数千万年前恐龙的骨骼被矿物质替换形成的石头', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'对刺激无反应',
+      shengzhang_n:'不生长',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'原有 DNA 早已降解',
+      xibao_n:'矿物质，无细胞'
+  }},
+  { name:'木制课桌',       img:'images/17-kezuo.png',             answer:false, summary:'来自树木，加工后细胞已死亡，不再有生命活动', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'对刺激无反应',
+      shengzhang_n:'不生长',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'原 DNA 已降解',
+      xibao_n:'木材，细胞已死亡'
+  }},
+  { name:'珍珠',           img:'images/18-zhenzhu.png',           answer:false, summary:'贝类外套膜分泌的碳酸钙结晶体，是生物的产物', dims:{
+      yingji:false,  shengzhang:false, fanyu:false,  xcdx:false, ycby:false, xibao:false,
+      yingji_n:'对刺激无反应',
+      shengzhang_n:'不生长',
+      fanyu_n:'不能繁殖',
+      xcdx_n:'不进行代谢',
+      ycby_n:'无遗传物质',
+      xibao_n:'碳酸盐晶体，无细胞'
+  }}
+];
+
+const HINT = '再想一想：它是否有细胞结构？能否独立进行新陈代谢和繁殖？';
+
+const stage    = document.getElementById('stage');
+const pool     = document.getElementById('pool');
+const drops    = { true: document.getElementById('drop-true'), false: document.getElementById('drop-false') };
+const zones    = Array.from(document.querySelectorAll('.zone'));
+const toastEl  = document.getElementById('toast');
+const overlay  = document.getElementById('overlay');
+const submitBtn= document.getElementById('submit');
+const scoreEl  = document.getElementById('score');
+const barEl    = document.getElementById('bar');
+const totalEl  = document.getElementById('total');
+const reviewEl = document.getElementById('review');
+const rvImg    = document.getElementById('rv-img');
+const rvBadge  = document.getElementById('rv-badge');
+const rvName   = document.getElementById('rv-name');
+const rvSummary= document.getElementById('rv-summary');
+const rvDims   = document.getElementById('rv-dims');
+const rvStep   = document.getElementById('rv-step');
+const rvBar    = document.getElementById('rv-bar');
+
+let mode = 'practice';
+let cards = [];
+let startedAt = null;
+let selected = null;
+let toastTimer = null;
+let rvIndex = 0;
+let reviewItems = [];
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 2400);
+}
+
+function makeTile(item, id){
+  const el = document.createElement('div');
+  el.className = 'tile';
+  el.dataset.id = id;
+  el.dataset.answer = String(item.answer);
+  el.tabIndex = 0;
+  el.innerHTML = '<img alt="' + item.name + '" src="' + item.img + '"><div class="label">' + item.name + '</div>';
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); toggleSelect(el); } });
+  return el;
+}
+
+function build(){
+  reviewEl.classList.remove('show');
+  overlay.classList.remove('show');
+  startedAt = null;
+  selected = null;
+  pool.innerHTML=''; drops.true.innerHTML=''; drops.false.innerHTML='';
+  cards = shuffle(ITEMS.slice()).map((it,i)=>({...it, dom:null, _id:'c'+i})).map(rec=>{
+    const el = makeTile(rec, rec._id);
+    rec.dom = el;
+    pool.appendChild(el);
+    return rec;
+  });
+  totalEl.textContent = cards.length;
+  update();
+}
+
+function update(){
+  const t = drops.true.children.length, f = drops.false.children.length;
+  document.getElementById('count-true').textContent = t + ' 张';
+  document.getElementById('count-false').textContent = f + ' 张';
+  if(mode === 'practice'){
+    const ok = cards.filter(c => c.dom.dataset.zone !== undefined && c.dom.dataset.zone === c.dom.dataset.answer).length;
+    scoreEl.textContent = ok;
+    barEl.style.width = (ok / cards.length * 100) + '%';
+    submitBtn.disabled = true;
+    if(ok === cards.length) succeed();
+  } else {
+    const placed = t + f;
+    scoreEl.textContent = placed;
+    barEl.style.width = (placed / cards.length * 100) + '%';
+    submitBtn.disabled = placed !== cards.length;
+  }
+}
+
+function toggleSelect(el){
+  if(mode === 'practice' && el.dataset.zone) return;
+  if(selected === el){ el.classList.remove('selected'); selected = null; return; }
+  if(selected) selected.classList.remove('selected');
+  selected = el;
+  el.classList.add('selected');
+}
+
+function startTimer(){ if(!startedAt) startedAt = Date.now(); }
+
+function place(el, zoneEl){
+  const ans = zoneEl.dataset.answer;
+  startTimer();
+  if(mode === 'practice'){
+    if(ans !== el.dataset.answer){
+      el.classList.remove('ok','no','wrong');
+      void el.offsetWidth;
+      el.classList.add('wrong');
+      setTimeout(()=>el.classList.remove('wrong'), 500);
+      pool.appendChild(el);
+      delete el.dataset.zone;
+      toast(HINT);
+      update();
+      return;
+    }
+    el.dataset.zone = ans;
+    el.classList.add('ok');
+    el.classList.remove('selected');
+    drops[ans].appendChild(el);
+    if(selected === el) selected = null;
+    update();
+    return;
+  }
+  el.dataset.zone = ans;
+  el.classList.remove('selected');
+  drops[ans].appendChild(el);
+  if(selected === el) selected = null;
+  update();
+}
+
+function checkAll(){
+  const wrong = cards.filter(c => !c.dom.dataset.zone || c.dom.dataset.zone !== c.dom.dataset.answer);
+  cards.forEach(c=>{ if(c.dom.dataset.zone === c.dom.dataset.answer) c.dom.classList.add(c.dom.dataset.answer==='true'?'ok':'no'); });
+  if(wrong.length === 0){ succeed(); return; }
+  wrong.forEach(c=>{
+    c.dom.classList.add('wrong');
+    setTimeout(()=>c.dom.classList.remove('wrong'), 700);
+    pool.appendChild(c.dom);
+    c.dom.classList.remove('ok','no');
+    delete c.dom.dataset.zone;
+  });
+  toast('有 ' + wrong.length + ' 项分类不正确，已退回，请重新判断。' + HINT);
+  update();
+}
+
+function succeed(){
+  const sec = startedAt ? Math.round((Date.now()-startedAt)/1000) : 0;
+  const mm = String(Math.floor(sec/60)).padStart(2,'0'), ss = String(sec%60).padStart(2,'0');
+  document.getElementById('ov-sub').textContent = '全部 ' + cards.length + ' 项判断正确';
+  document.getElementById('ov-meta').innerHTML = '模式：<b>' + (mode==='practice'?'练习模式':'挑战模式') + '</b>　用时：<b>' + mm + ':' + ss + '</b>';
+  overlay.classList.add('show');
+}
+
+function startReview(){
+  overlay.classList.remove('show');
+  reviewItems = cards.slice();
+  rvIndex = 0;
+  reviewEl.classList.add('show');
+  renderReview();
+}
+
+function renderReview(){
+  const it = reviewItems[rvIndex];
+  rvImg.src = it.img;
+  rvImg.alt = it.name;
+  rvBadge.textContent = it.answer ? '生 物' : '非 生 物';
+  rvBadge.className = 'badge ' + (it.answer ? 'live' : 'non');
+  rvName.textContent = it.name;
+  rvSummary.textContent = it.summary;
+  rvDims.innerHTML = DIMS.map(d=>{
+    const ok = it.dims[d.key];
+    const note = it.dims[d.key + '_n'] || '';
+    return '<div class="dim">' +
+      '<div class="mark ' + (ok ? 'y' : 'n') + '">' + (ok ? '√' : '×') + '</div>' +
+      '<div class="title">' + d.title + '</div>' +
+      '<div class="note">' + note + '</div>' +
+    '</div>';
+  }).join('');
+  rvStep.textContent = (rvIndex+1) + ' / ' + reviewItems.length;
+  rvBar.style.width = ((rvIndex+1) / reviewItems.length * 100) + '%';
+  document.getElementById('rv-prev').disabled = rvIndex === 0;
+  document.getElementById('rv-next').textContent = rvIndex === reviewItems.length-1 ? '完成' : '下一项';
+}
+
+/* Dragging */
+let drag = null;
+function onPointerDown(e){
+  if(e.button && e.button !== 0) return;
+  const el = e.currentTarget;
+  if(mode === 'practice' && el.dataset.zone) return;
+  if(overlay.classList.contains('show')) return;
+  if(reviewEl.classList.contains('show')) return;
+  const r = el.getBoundingClientRect();
+  const ghost = el.cloneNode(true);
+  ghost.classList.add('tile-ghost');
+  ghost.style.width = r.width + 'px';
+  ghost.style.height = r.height + 'px';
+  ghost.style.left = r.left + 'px';
+  ghost.style.top = r.top + 'px';
+  document.body.appendChild(ghost);
+  drag = { el, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY };
+  el.classList.add('dragging');
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+  e.preventDefault();
+}
+function onPointerMove(e){
+  if(!drag) return;
+  drag.x = e.clientX; drag.y = e.clientY;
+  drag.ghost.style.left = (e.clientX - drag.dx) + 'px';
+  drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+  const z = zoneUnder(e.clientX, e.clientY);
+  zones.forEach(zz=>zz.classList.toggle('hover', zz === z));
+}
+function zoneUnder(x, y){
+  if(typeof x !== 'number' || typeof y !== 'number') return null;
+  const g = drag && drag.ghost;
+  let el = null;
+  if(g) g.style.display = 'none';
+  try { el = document.elementFromPoint(x, y); } catch(err){ el = null; }
+  if(g) g.style.display = '';
+  if(el){ const z = el.closest('.zone'); if(z) return z; }
+  for(const z of zones){
+    const r = z.getBoundingClientRect();
+    if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return z;
+  }
+  return null;
+}
+function onPointerUp(e){
+  if(!drag) return;
+  const { el, ghost, sx, sy } = drag;
+  const x = (e && typeof e.clientX === 'number') ? e.clientX : drag.x;
+  const y = (e && typeof e.clientY === 'number') ? e.clientY : drag.y;
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+  zones.forEach(z=>z.classList.remove('hover'));
+  const z = zoneUnder(x, y);
+  ghost.remove();
+  el.classList.remove('dragging');
+  drag = null;
+  if(Math.hypot(x - sx, y - sy) < 6){ toggleSelect(el); return; }
+  if(z){ place(el, z); return; }
+  if(el.dataset.zone){ delete el.dataset.zone; pool.appendChild(el); el.classList.remove('ok','no'); update(); }
+}
+
+zones.forEach(z=>{
+  z.addEventListener('click', ()=>{
+    if(!selected) return;
+    if(reviewEl.classList.contains('show')) return;
+    place(selected, z);
+  });
+});
+
+document.getElementById('m-practice').addEventListener('click', ()=>setMode('practice'));
+document.getElementById('m-challenge').addEventListener('click', ()=>setMode('challenge'));
+function setMode(m){
+  mode = m;
+  document.getElementById('m-practice').classList.toggle('active', m==='practice');
+  document.getElementById('m-challenge').classList.toggle('active', m==='challenge');
+  submitBtn.style.display = m==='challenge' ? '' : 'none';
+  build();
+}
+submitBtn.addEventListener('click', checkAll);
+document.getElementById('reset').addEventListener('click', ()=>{ overlay.classList.remove('show'); build(); });
+document.getElementById('ov-again').addEventListener('click', ()=>{ overlay.classList.remove('show'); build(); });
+document.getElementById('ov-review').addEventListener('click', startReview);
+document.getElementById('rv-prev').addEventListener('click', ()=>{ if(rvIndex>0){ rvIndex--; renderReview(); }});
+document.getElementById('rv-next').addEventListener('click', ()=>{
+  if(rvIndex < reviewItems.length-1){ rvIndex++; renderReview(); }
+  else { reviewEl.classList.remove('show'); }
+});
+document.getElementById('rv-exit').addEventListener('click', ()=>{ reviewEl.classList.remove('show'); });
+
+/* 舞台缩放：contain 居中，非16:9留黑边不裁切 */
+function fitStage(){
+  const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+  stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+}
+window.addEventListener('resize', fitStage);
+fitStage();
+
+/* Fullscreen toggle */
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else (document.documentElement.requestFullscreen && document.documentElement.requestFullscreen());
+}
+document.getElementById('full').addEventListener('click', toggleFull);
+window.addEventListener('keydown', e=>{
+  if(e.key==='f' || e.key==='F'){
+    const tag=e.target.tagName; if(tag==='INPUT'||tag==='TEXTAREA') return;
+    toggleFull();
+  }
+});
+
+build();
+submitBtn.style.display = 'none';
+</script>
+</body>
+</html>

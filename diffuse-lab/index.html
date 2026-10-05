@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>研究细胞大小与物质扩散的关系</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:#e9eef4;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ---------- 固定舞台:1600x900,等比缩放 ---------- */
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;
+  background:radial-gradient(1200px 700px at 24% -8%,#131a15 0%,#0d1015 46%,#0b0e13 100%);
+  -webkit-user-select:none;user-select:none;overflow:hidden}
+
+/* ---------- 顶栏 ---------- */
+.topbar{height:78px;display:flex;align-items:center;padding:0 30px}
+.titles h1{font-size:26px;letter-spacing:1px;font-weight:700}
+.titles p{font-size:14.5px;color:#8b95a1;letter-spacing:1.5px;margin-top:6px}
+.top-actions{margin-left:auto;display:flex;align-items:center}
+.btn-full{width:44px;height:44px;border-radius:11px;border:1px solid #2a3340;background:#151a22;color:#c7d0da;font-size:17px;margin-right:14px}
+.btn-full:hover{border-color:#b8e04e;color:#b8e04e}
+.seg{display:flex;background:#151a22;border:1px solid #2a3340;border-radius:12px;padding:4px}
+.seg button{font-size:16px;letter-spacing:2px;padding:9px 22px;border-radius:9px;color:#8b95a1}
+.seg button.active{background:#b8e04e;color:#16220a;font-weight:700}
+
+/* ---------- 实验操作板块 ---------- */
+.view{display:none}
+.view.show{display:block}
+.op-wrap{display:flex;padding:4px 28px 0}
+.op-main{width:1184px}
+.toolbar{display:flex;align-items:center;height:46px}
+.pill{font-size:16.5px;letter-spacing:1px;padding:9px 24px;border-radius:999px;border:1px solid #2a3340;background:#151a22;color:#c7d0da;margin-right:10px}
+.pill:hover{border-color:#b8e04e;color:#b8e04e}
+.pill.on{background:#b8e04e;border-color:#b8e04e;color:#16220a;font-weight:700}
+.pill.warn{border-color:#5a4a3a}
+.tool-hint{margin-left:auto;font-size:15px;color:#77828d;letter-spacing:.5px}
+#scene{display:block;width:1184px;height:690px}
+
+/* 时间轴 */
+.timeline{display:flex;align-items:center;height:68px;background:#12161d;border:1px solid #232a33;border-radius:14px;padding:0 18px;margin-top:2px}
+.btn-play{width:48px;height:48px;border-radius:50%;background:#b8e04e;color:#16220a;font-size:17px;flex-shrink:0;box-shadow:0 4px 16px rgba(184,224,78,.25)}
+.btn-play:hover{background:#c7ec68}
+.clock{margin:0 16px;flex-shrink:0}
+.clock b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.clock span{font-size:15px;color:#77828d}
+.scrub{flex:1;height:26px;-webkit-appearance:none;background:transparent;margin:0 14px}
+.scrub::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#b8e04e calc(var(--p,0)*1%),#232a33 0)}
+.scrub::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#eaf6d6;border:3px solid #b8e04e;margin-top:-7px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.speed{display:flex;background:#151a22;border:1px solid #2a3340;border-radius:10px;padding:2px;flex-shrink:0}
+.speed button{font-size:15px;padding:6px 14px;border-radius:8px;color:#8b95a1}
+.speed button.active{background:#26313d;color:#e9eef4;font-weight:700}
+
+/* 侧栏 */
+.side{width:340px;margin-left:20px}
+.card{background:#12161d;border:1px solid #232a33;border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.card h3{font-size:16.5px;letter-spacing:2px;color:#8b95a1;margin-bottom:12px}
+.step{display:flex;align-items:flex-start;padding:8px 10px;border-radius:9px;margin-bottom:5px;font-size:15.5px;line-height:1.5;color:#6d7884}
+.step .no{width:24px;height:24px;border-radius:50%;border:1.5px solid #3a4450;display:flex;align-items:center;justify-content:center;font-size:13px;margin-right:11px;flex-shrink:0;margin-top:1px}
+.step.active{background:rgba(184,224,78,.10);color:#e6f2cf}
+.step.active .no{border-color:#b8e04e;color:#b8e04e}
+.step.done{color:#9aa5ae}
+.step.done .no{background:rgba(184,224,78,.16);border-color:#7ca22c;color:#b8e04e}
+.step.done .no i{font-style:normal}
+.cta{display:block;width:100%;text-align:center;padding:12px;border-radius:10px;background:#b8e04e;color:#16220a;font-size:16px;font-weight:700;letter-spacing:1px;margin-top:10px}
+.cta:hover{background:#c7ec68}
+.stat{display:flex;justify-content:space-between;font-size:15.5px;padding:8px 2px;color:#8b95a1}
+.stat b{color:#e9eef4;font-variant-numeric:tabular-nums}
+.stat b.lime{color:#b8e04e}
+
+/* ---------- 数据统计板块 ---------- */
+.data-wrap{padding:6px 26px 0}
+.data-cols{display:flex}
+.dcol-l{width:770px;margin-right:18px}
+.dcol-r{width:760px}
+.chart-box h3{font-size:19px}
+.tbl-card h3 span{font-size:13.5px;color:#77828d;letter-spacing:.5px;font-weight:400;margin-left:8px}
+table{width:100%;border-collapse:collapse;font-size:17px}
+th,td{border:1px solid #2a3340;padding:11px 6px;text-align:center}
+th{color:#aeb8c2;font-weight:600;background:#161b23;font-size:14.5px;line-height:1.4}
+td.fix{color:#e9eef4;font-weight:700;background:#141922}
+.rev{cursor:pointer}
+.rev .val{display:none}
+.rev.on .val{display:inline}
+.rev.on .ghost{display:none}
+.rev .ghost{color:#6d7884;letter-spacing:3px}
+.rev:hover .ghost{color:#b8e04e}
+td.dep{color:#77828d}
+td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
+.tbl-note{font-size:13.5px;color:#77828d;margin-top:12px;line-height:1.7}
+.tbl-btn{float:right;font-size:14.5px;color:#7ca22c;border:1px solid #35421f;border-radius:999px;padding:5px 16px;letter-spacing:1px}
+.tbl-btn:hover{color:#b8e04e;border-color:#b8e04e}
+.qa{border-top:1px dashed #232a33;padding:13px 2px 0;margin-top:12px}
+.qa p{font-size:17px;line-height:1.6;color:#c3ccd6}
+.qa p b{color:#e9eef4}
+.qa button{font-size:15px;color:#7ca22c;margin-top:7px;letter-spacing:1px}
+.qa button:hover{color:#b8e04e}
+.ans{display:none;font-size:16px;line-height:1.7;color:#9fe36a;background:rgba(184,224,78,.06);border-left:3px solid #7ca22c;padding:10px 14px;margin-top:9px;border-radius:0 10px 10px 0}
+.ans.show{display:block}
+.chart-box svg{display:block}
+
+/* 图表:点击逐根生成 */
+#chart1,#chart2{cursor:pointer}
+#chart1.done,#chart2.done{cursor:default}
+.chart-box .tbl-btn.rst{margin-right:8px}
+.ghostbox{animation:breath 2.4s ease-in-out infinite}
+@keyframes breath{0%,100%{opacity:.45}50%{opacity:1}}
+.barg{transform-box:fill-box;transform-origin:50% 100%;animation:cgrow .55s cubic-bezier(.25,.9,.3,1) both}
+@keyframes cgrow{from{transform:scaleY(.04)}to{transform:scaleY(1)}}
+.bnumg{opacity:0;animation:bfade .4s ease both}
+@keyframes bfade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* 通栏结论横幅 */
+.concl{display:flex;align-items:stretch;margin-top:14px;height:106px}
+.concl .clabel{width:96px;flex-shrink:0;background:linear-gradient(180deg,#c3e862,#a4cf42);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;letter-spacing:3px;color:#16220a;box-shadow:0 6px 22px rgba(184,224,78,.22)}
+.concl .cnode{flex:1;background:rgba(184,224,78,.09);border:1.5px solid #46582b;border-radius:14px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.concl .cnode b{display:block;font-size:22px;color:#dcf09a;margin-bottom:7px;letter-spacing:1px}
+.concl .cnode span{font-size:15.5px;color:#a9b5c1;line-height:1.5;display:block}
+.concl .cnode.final{background:linear-gradient(180deg,#c3e862,#a8d448);border-color:#c3e862;box-shadow:0 6px 24px rgba(184,224,78,.3)}
+.concl .cnode.final b{color:#15200a}
+.concl .cnode.final span{color:#28350f;font-weight:600}
+.concl .carrow{display:flex;align-items:center;padding:0 9px;color:#b8e04e;font-size:28px;font-weight:700}
+
+/* 结论栏:逐条点击呈现 */
+.concl{position:relative}
+.chint{position:absolute;left:110px;right:136px;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:15.5px;color:#5c6772;letter-spacing:2px;pointer-events:none;transition:opacity .35s}
+.chint.hide{opacity:0}
+.concl .cnode{opacity:0;transform:scale(.72);transition:opacity .4s ease,transform .4s ease}
+.concl .cnode.on{opacity:1;transform:scale(1)}
+.concl .carrow{opacity:0;transition:opacity .4s ease}
+.concl .carrow.on{opacity:1}
+.concl .cnode.final.on{animation:cpulse .9s ease .15s}
+@keyframes cpulse{0%{box-shadow:0 6px 24px rgba(184,224,78,.3),0 0 0 0 rgba(184,224,78,.55)}100%{box-shadow:0 6px 24px rgba(184,224,78,.3),0 0 0 22px rgba(184,224,78,0)}}
+.cops{width:118px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;gap:5px;padding-left:12px}
+.cop{font-size:13px;letter-spacing:1px;padding:5px 0;border-radius:999px;border:1px solid #35421f;color:#c9d8a8}
+.cop:hover{border-color:#b8e04e;color:#b8e04e}
+.cop.primary{background:#b8e04e;color:#16220a;font-weight:700;border-color:#b8e04e}
+.cop.primary:hover{background:#c7ec68}
+.cop:disabled{opacity:.4;border-color:#2a3340;color:#8b95a1;background:none;cursor:default}
+
+/* ---------- 测量弹窗 ---------- */
+.modal-mask{position:absolute;inset:0;background:rgba(5,7,10,.62);display:none;align-items:center;justify-content:center;z-index:20}
+.modal-mask.show{display:flex}
+.modal{width:800px;background:#12161d;border:1px solid #2a3340;border-radius:18px;padding:24px 28px 22px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal h2{font-size:20px;letter-spacing:1px}
+.modal .sub{font-size:14.5px;color:#8b95a1;margin-top:8px;line-height:1.7}
+.mtabs{display:flex;margin:16px 0 6px}
+.mtabs button{font-size:16px;padding:8px 20px;border-radius:10px;margin-right:10px;border:1px solid #2a3340;color:#8b95a1}
+.mtabs button.active{background:#b8e04e;color:#16220a;font-weight:700;border-color:#b8e04e}
+.mrow{display:flex;align-items:flex-start}
+#msvg{width:500px;flex-shrink:0;touch-action:none;cursor:ew-resize}
+.minfo{width:190px;margin-left:22px;padding-top:6px}
+.mread{font-size:14.5px;color:#8b95a1;letter-spacing:1px}
+.mread b{display:block;font-size:38px;color:#b8e04e;font-variant-numeric:tabular-nums;margin-top:6px;letter-spacing:0}
+.mbtns{display:flex;flex-direction:column;margin-top:20px}
+.mbtn{font-size:16.5px;padding:13px;border-radius:10px;text-align:center;letter-spacing:1px;margin-bottom:10px;border:1px solid #2a3340;color:#c7d0da}
+.mbtn:hover{border-color:#b8e04e;color:#b8e04e}
+.mbtn.primary{background:#b8e04e;color:#16220a;font-weight:700;border-color:#b8e04e}
+.mbtn.primary:hover{background:#c7ec68}
+.mfoot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px dashed #232a33;padding-top:14px}
+.mfoot .note{font-size:13.5px;color:#77828d;line-height:1.6}
+.mclose{font-size:15px;color:#8b95a1;letter-spacing:1px}
+.mclose:hover{color:#e9eef4}
+
+/* toast */
+#toast{position:absolute;left:50%;top:94px;transform:translateX(-50%);background:#1a2028;border:1px solid #35421f;color:#d3e8b2;font-size:16.5px;letter-spacing:.5px;padding:12px 26px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <header class="topbar">
+    <div class="titles">
+      <h1>研究细胞大小与物质扩散的关系</h1>
+      <p>北师大版 · 七年级上册 · 第3章 第1节 细胞通过分裂而增殖</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn-full" id="btnFull" title="全屏 (F)">⛶</button>
+      <div class="seg">
+        <button data-view="op" class="active">实验操作</button>
+        <button data-view="data">数据统计</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 实验操作 ============ -->
+  <section class="view show" id="viewOp">
+    <div class="op-wrap">
+      <div class="op-main">
+        <div class="toolbar">
+          <button class="pill" id="btnCut">切开</button>
+          <button class="pill" id="btnMeasure">测量</button>
+          <button class="pill" id="btnXray">透视核心</button>
+          <button class="pill warn" id="btnReset">重置</button>
+          <span class="tool-hint">点击烧杯下方的切块可直接测量 · 拖动时间轴可快进</span>
+        </div>
+        <svg id="scene" viewBox="0 0 1184 690" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="timeline">
+          <button class="btn-play" id="btnPlay">▶</button>
+          <div class="clock"><b id="clockNow">00:00</b> <span id="clockMax">/ 10:00</span></div>
+          <input type="range" class="scrub" id="scrub" min="0" max="600" step="1" value="0">
+          <div class="speed">
+            <button data-sp="1">×1 实时</button>
+            <button data-sp="30" class="active">×30 演示</button>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="card">
+          <h3>实验步骤</h3>
+          <div class="step done" id="st1"><span class="no"><i>✓</i></span><span>切取三个琼脂立方块(棱长 3cm、2cm、1cm)</span></div>
+          <div class="step" id="st2"><span class="no">2</span><span>浸入 NaOH 溶液,计时 10 分钟</span></div>
+          <div class="step" id="st3"><span class="no">3</span><span>取出琼脂块,吸干表面溶液,切开观察颜色变化</span></div>
+          <div class="step" id="st4"><span class="no">4</span><span>测量扩散深度,记录到表3-1</span></div>
+          <button class="cta" id="btnGoData">进入「数据统计」分析 →</button>
+        </div>
+        <div class="card">
+          <h3>当前状态</h3>
+          <div class="stat"><span id="labTime">计时</span><b id="vTime">00:00 / 10:00</b></div>
+          <div class="stat"><span id="labDep">当前扩散深度</span><b id="vDep">0.00 cm</b></div>
+          <div class="stat"><span>已测量记录</span><b id="vDone" class="lime">0 / 3</b></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ 数据统计 ============ -->
+  <section class="view" id="viewData">
+    <div class="data-wrap">
+      <div class="data-cols">
+        <div class="dcol-l">
+          <div class="card tbl-card">
+            <h3>表3-1 不同棱长琼脂块中的扩散情况<span>NaOH 溶液中浸泡 10 分钟</span><button class="tbl-btn" id="btnAll">全部显示</button></h3>
+            <table id="tbl">
+              <tr><th>棱长/cm</th><th>表面积/cm²</th><th>体积/cm³</th><th>表面积与<br>体积之比</th><th>扩散深度/cm</th></tr>
+            </table>
+            <p class="tbl-note">* 表面积、体积等单元格可点击逐步显示,便于课堂提问;扩散深度在「实验操作」中测量后自动填入。</p>
+          </div>
+          <div class="card">
+            <h3>讨论</h3>
+            <div class="qa">
+              <p><b>①</b> 相同时间内,不同大小琼脂块中的扩散深度有什么规律?</p>
+              <button data-ans="a1">查看参考答案</button>
+              <div class="ans" id="a1">扩散深度基本相同(约 0.5cm),与琼脂块的大小无关——因为相同条件下,扩散的速率是一样的。</div>
+            </div>
+            <div class="qa">
+              <p><b>②</b> 据此推测,细胞大小与细胞物质扩散有什么关系?</p>
+              <button data-ans="a2">查看参考答案</button>
+              <div class="ans" id="a2">细胞越大,表面积与体积之比越小,物质的扩散越难以满足细胞整个体积的需要——这是细胞不能无限长大的重要原因。</div>
+            </div>
+          </div>
+        </div>
+        <div class="dcol-r">
+          <div class="card chart-box"><h3>表面积与体积之比<button class="tbl-btn" id="c1All">全部生成</button><button class="tbl-btn rst" id="c1Rst">重置</button></h3><div id="chart1"></div></div>
+          <div class="card chart-box"><h3>琼脂块变红比例(占体积)<button class="tbl-btn" id="c2All">全部生成</button><button class="tbl-btn rst" id="c2Rst">重置</button></h3><div id="chart2"></div></div>
+        </div>
+      </div>
+      <div class="concl" id="concl">
+        <div class="clabel">结论</div>
+        <div class="chint" id="clHint">对照表3-1 与两张图表,点击「呈现下一条」逐条得出结论</div>
+        <div class="cnode"><b>扩散深度相同</b><span>三块都约 0.5cm</span></div>
+        <div class="carrow">→</div>
+        <div class="cnode"><b>块越小,S/V 比越大</b><span>6:1 &gt; 3:1 &gt; 2:1</span></div>
+        <div class="carrow">→</div>
+        <div class="cnode"><b>变红比例越高</b><span>100% &gt; 88% &gt; 70%</span></div>
+        <div class="carrow">→</div>
+        <div class="cnode final"><b>物质交换效率越高</b><span>细胞因此不能无限长大</span></div>
+        <div class="cops">
+          <button class="cop primary" id="clNext">呈现下一条</button>
+          <button class="cop" id="clAll">全部显示</button>
+          <button class="cop" id="clReset">重新隐藏</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 测量弹窗 ============ -->
+  <div class="modal-mask" id="mask">
+    <div class="modal">
+      <h2 id="mTitle">测量扩散深度</h2>
+      <p class="sub">拖动绿色测量线,从琼脂块<b>左缘</b>量到<b>红色与白色的交界处</b>,然后记录到表3-1。</p>
+      <div class="mtabs" id="mtabs">
+        <button data-mi="0" class="active">3cm 块</button>
+        <button data-mi="1">2cm 块</button>
+        <button data-mi="2">1cm 块</button>
+      </div>
+      <div class="mrow">
+        <svg id="msvg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="minfo">
+          <div class="mread">读数<b id="mRead">0.00 cm</b></div>
+          <div class="mbtns">
+            <div class="mbtn" id="btnAlign">对齐到边界</div>
+            <div class="mbtn primary" id="btnRecord">记录到表3-1</div>
+            <div class="mbtn" id="btnMClose">关闭</div>
+          </div>
+        </div>
+      </div>
+      <div class="mfoot">
+        <span class="note">记录值将自动填入表3-1 对应行,并更新右侧图表</span>
+        <span class="mclose" id="btnMClose2">✕ 关闭</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= 数据与状态 ================= */
+  var CUBES = [
+    { L: 3, SA: 54, V: 27, SV: '2:1' },
+    { L: 2, SA: 24, V: 8,  SV: '3:1' },
+    { L: 1, SA: 6,  V: 1,  SV: '6:1' }
+  ];
+  var MAXT = 600, FD = 0.5, PX = 60; /* 60px = 1cm(切割台) */
+  var S = { t: 0, playing: false, speed: 30, cut: false, dCut: 0, xray: false,
+            depth: [null, null, null], marker: [0, 0, 0], view: 'op' };
+  var revealed = { sa: false, v: false, sv: false };
+  var shown = [0, 0];   /* [0]=S/V 图已生成柱数, [1]=变红比例图已生成柱数 */
+  var clStep = 0;       /* 结论已呈现条数 0-4 */
+  var mCur = 0;
+
+  function depthAt(t) { return FD * t / MAXT; }
+  function coreSide(L, d) { return Math.max(0, L - 2 * d); }
+  function redFrac(L, d) { var c = coreSide(L, d); return c === 0 ? 1 : 1 - Math.pow(c / L, 3); }
+  function byId(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmt(t) { return pad(Math.floor(t / 60)) + ':' + pad(Math.floor(t % 60)); }
+
+  /* 烧杯几何:三个烧杯水平居中分布 */
+  var BX = [247, 592, 937];          /* 烧杯中心 x */
+  var BT = 70, BB = 312, BW = 176;   /* 烧杯顶/底/宽 */
+  var LY = 120;                      /* 液面 y */
+  var CUBE_S = [120, 80, 40];       /* 等轴立方块边长(px) */
+  /* 切割台几何 */
+  var SLOT = [
+    { x: 342, y: 408, S: 180 },
+    { x: 592, y: 448, S: 120 },
+    { x: 782, y: 478, S: 60 }
+  ];
+
+  /* ================= 场景搭建 ================= */
+  function poly(pts) { return pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' '); }
+
+  function isoCube(cx, baseY, s) {
+    var a = s * 0.62, b = s * 0.31, h = s * 0.62;
+    var P0 = [cx, baseY], P1 = [cx + a, baseY - b], P2 = [cx - a, baseY - b];
+    var T0 = [cx, baseY - h], T1 = [cx + a, baseY - b - h], T2 = [cx - a, baseY - b - h];
+    var T3 = [cx, baseY - h - 2 * b];
+    return {
+      top: poly([T0, T1, T3, T2]),
+      right: poly([P0, P1, T1, T0]),
+      left: poly([P2, P0, T0, T2])
+    };
+  }
+  function cubeFaces(g, c) {
+    return '<polygon points="' + g.top + '" fill="' + c.top + '"/>' +
+           '<polygon points="' + g.right + '" fill="' + c.right + '"/>' +
+           '<polygon points="' + g.left + '" fill="' + c.left + '"/>';
+  }
+  var PALE = { top: '#f6efdd', right: '#e9dfc6', left: '#d6c9a6' };
+  var RED  = { top: '#ff8090', right: '#f0516a', left: '#cc3f57' };
+  var CORE = { top: '#ffffff', right: '#f2efe3', left: '#e0dbc8' };
+
+  function beakerSVG(bx, i) {
+    var x0 = bx - BW / 2, x1 = bx + BW / 2, r = 14;
+    var glass = '<path d="M' + x0 + ' ' + BT + ' L' + x0 + ' ' + (BB - r) +
+      ' Q' + x0 + ' ' + BB + ' ' + (x0 + r) + ' ' + BB +
+      ' L' + (x1 - r) + ' ' + BB + ' Q' + x1 + ' ' + BB + ' ' + x1 + ' ' + (BB - r) +
+      ' L' + x1 + ' ' + BT + '" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.24)" stroke-width="2" stroke-linecap="round"/>';
+    var liq = '<path d="M' + (x0 + 4) + ' ' + LY + ' L' + (x0 + 4) + ' ' + (BB - 8) +
+      ' Q' + (x0 + 4) + ' ' + (BB - 10) + ' ' + (x0 + 14) + ' ' + (BB - 10) +
+      ' L' + (x1 - 14) + ' ' + (BB - 10) + ' Q' + (x1 - 4) + ' ' + (BB - 10) + ' ' + (x1 - 4) + ' ' + (BB - 8) +
+      ' L' + (x1 - 4) + ' ' + LY + '" fill="rgba(122,180,255,.07)"/>' +
+      '<line x1="' + (x0 + 4) + '" y1="' + LY + '" x2="' + (x1 - 4) + '" y2="' + LY + '" stroke="rgba(150,200,255,.4)" stroke-width="1.5"/>';
+    var ticks = '', ty;
+    for (var k = 1; k <= 3; k++) {
+      ty = LY + k * 58;
+      ticks += '<line x1="' + (x0 + 6) + '" y1="' + ty + '" x2="' + (x0 + 22) + '" y2="' + ty + '" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>';
+    }
+    var label = '<text x="' + bx + '" y="' + (BB + 36) + '" text-anchor="middle" font-size="17" fill="#8b95a1">棱长 ' + CUBES[i].L + 'cm</text>';
+    return glass + liq + ticks + label;
+  }
+
+  function buildScene() {
+    var s = '';
+    s += '<defs><radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+         '<stop offset="0%" stop-color="#b8e04e" stop-opacity=".10"/>' +
+         '<stop offset="100%" stop-color="#b8e04e" stop-opacity="0"/></radialGradient></defs>';
+    s += '<ellipse cx="592" cy="200" rx="430" ry="200" fill="url(#glow)"/>';
+
+    /* 烧杯 + 浸泡中的立方块 */
+    for (var i = 0; i < 3; i++) {
+      s += '<g id="bk' + i + '">' + beakerSVG(BX[i], i) + '</g>';
+      s += '<g id="gSoak' + i + '">';
+      s += '<g id="pale' + i + '">' + cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i]), PALE) + '</g>';
+      s += '<g id="redg' + i + '" opacity="0">' + cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i]), RED) + '</g>';
+      s += '<g id="core' + i + '" opacity="0"></g>';
+      s += '</g>';
+    }
+
+    /* 取出箭头 */
+    for (var j = 0; j < 3; j++) {
+      s += '<g id="arw' + j + '" opacity=".14">' +
+        '<line x1="' + BX[j] + '" y1="356" x2="' + BX[j] + '" y2="398" stroke="#b8e04e" stroke-width="2" stroke-dasharray="5 6"/>' +
+        '<path d="M' + (BX[j] - 6) + ' 392 L' + BX[j] + ' 404 L' + (BX[j] + 6) + ' 392" fill="none" stroke="#b8e04e" stroke-width="2"/></g>';
+    }
+
+    /* 切割台 */
+    s += '<rect x="70" y="402" width="1044" height="216" rx="16" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.14)" stroke-dasharray="8 7" stroke-width="1.5"/>';
+    s += '<text x="92" y="430" font-size="15.5" fill="#77828d" letter-spacing="2">切割 · 测量台</text>';
+    s += '<text id="hintCut" x="592" y="522" text-anchor="middle" font-size="16" fill="#6d7884" letter-spacing="1">10 分钟计时结束后 → 点击「切开」,取出琼脂块观察切面</text>';
+
+    /* 切开后的切块(初始隐藏) */
+    for (var m = 0; m < 3; m++) {
+      s += '<g id="gBoard' + m + '" style="display:none;cursor:pointer"></g>';
+    }
+    byId('scene').innerHTML = s;
+  }
+
+  /* ================= 动画工具 ================= */
+  function ease(p) { return p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
+  function tw(dur, fn, done) {
+    var t0 = performance.now();
+    function step(now) {
+      var p = Math.min(1, (now - t0) / dur);
+      fn(ease(p));
+      if (p < 1) requestAnimationFrame(step);
+      else if (done) done();
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ================= 浸泡阶段渲染 ================= */
+  function updateSoak() {
+    var p = Math.min(1, S.t / 45);
+    for (var i = 0; i < 3; i++) {
+      var g = byId('gSoak' + i);
+      if (!g || S.cut) continue;
+      var pale = byId('pale' + i), red = byId('redg' + i), core = byId('core' + i);
+      pale.setAttribute('opacity', S.xray ? '0.34' : '1');
+      red.setAttribute('opacity', S.xray ? String(p * 0.42) : String(p));
+      if (S.xray) {
+        var d = depthAt(S.t);
+        var cs = coreSide(CUBES[i].L, d) / CUBES[i].L;
+        if (cs > 0.04) {
+          core.innerHTML = cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i] * cs), CORE);
+          core.setAttribute('opacity', '0.92');
+        } else { core.setAttribute('opacity', '0'); }
+      } else core.setAttribute('opacity', '0');
+    }
+  }
+
+  /* ================= 切开流程 ================= */
+  function boardLabel(i) {
+    var g = SLOT[i];
+    var t = byId('bl' + i);
+    var done = S.depth[i] != null;
+    t.textContent = done ? ('棱长 ' + CUBES[i].L + 'cm · 已记录 ' + S.depth[i].toFixed(2) + ' cm') : ('棱长 ' + CUBES[i].L + 'cm');
+    t.setAttribute('fill', done ? '#b8e04e' : '#8b95a1');
+  }
+
+
+  function buildBoardSquare(i) {
+    var g = SLOT[i], L = CUBES[i].L, d = S.dCut;
+    var Sp = g.S, C = coreSide(L, d) / L * Sp;
+    var x = g.x, y = g.y, half = Sp / 2;
+    var h = '';
+    h += '<g id="hl' + i + '">';
+    h += '<rect x="' + x + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="#ef4d66"/>';
+    if (C > 8) {
+      var wx = x + (Sp - C) / 2;
+      h += '<rect x="' + wx + '" y="' + (y + (Sp - C) / 2) + '" width="' + Math.max(0, (x + half) - wx) + '" height="' + C + '" fill="#f4efe2"/>';
+    }
+    h += '<rect x="' + x + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>';
+    h += '</g>';
+    h += '<g id="hr' + i + '">';
+    h += '<rect x="' + (x + half) + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="#ef4d66"/>';
+    if (C > 8) {
+      var wx2 = x + half, w2 = Math.max(0, (x + (Sp + C) / 2) - wx2);
+      h += '<rect x="' + wx2 + '" y="' + (y + (Sp - C) / 2) + '" width="' + w2 + '" height="' + C + '" fill="#f4efe2"/>';
+    }
+    h += '<rect x="' + (x + half) + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>';
+    h += '</g>';
+    h += '<line id="knife' + i + '" x1="' + (x + half) + '" y1="' + y + '" x2="' + (x + half) + '" y2="' + y + '" stroke="#eaf6d6" stroke-width="3" style="display:none"/>';
+    h += '<text id="bl' + i + '" x="' + (x + half) + '" y="' + (y + Sp + 28) + '" text-anchor="middle" font-size="16.5" fill="#8b95a1"></text>';
+    return h;
+  }
+
+  function doCut() {
+    if (S.cut) { toast('已经切开啦,点击切块可以进行测量'); return; }
+    S.cut = true;
+    S.dCut = depthAt(S.t);
+    byId('hintCut').style.display = 'none';
+    for (var i = 0; i < 3; i++) {
+      (function (i) {
+        setTimeout(function () {
+          var g = byId('gSoak' + i);
+          byId('arw' + i).setAttribute('opacity', '0');
+          tw(340, function (p) {
+            g.setAttribute('opacity', String(1 - p));
+            g.setAttribute('transform', 'translate(0,' + (p * 30) + ')');
+          }, function () {
+            g.style.display = 'none';
+            var b = byId('gBoard' + i);
+            b.innerHTML = buildBoardSquare(i);
+            boardLabel(i);
+            b.style.display = '';
+            b.setAttribute('opacity', '0');
+            tw(240, function (p) { b.setAttribute('opacity', String(p)); }, function () { knifeAnim(i); });
+          });
+        }, i * 140);
+      })(i);
+    }
+    updateSteps();
+    toast('已取出并切开 · 观察切面:红色扩散层包着白色核心');
+  }
+
+  function knifeAnim(i) {
+    var k = byId('knife' + i), g = SLOT[i];
+    k.style.display = '';
+    tw(360, function (p) {
+      var y = g.y + g.S * p;
+      k.setAttribute('y1', y); k.setAttribute('y2', y);
+      k.setAttribute('opacity', String(p < .75 ? 1 : (1 - p) / .25));
+    }, function () {
+      k.style.display = 'none';
+      var l = byId('hl' + i), r = byId('hr' + i);
+      tw(380, function (p) {
+        var d = 10 * p;
+        l.setAttribute('transform', 'translate(' + (-d) + ',0)');
+        r.setAttribute('transform', 'translate(' + d + ',0)');
+      });
+    });
+  }
+
+  /* ================= 测量弹窗 ================= */
+  var MPC = 110; /* 弹窗内 110px = 1cm */
+  function renderModal(i) {
+    mCur = i;
+    var L = CUBES[i].L, d = S.dCut;
+    var Sp = L * MPC, C = coreSide(L, d) / L * Sp;
+    var x = 40, y = 26;
+    var w = 40 + Sp + 40, hgt = 26 + Sp + 92;
+    var s = '';
+    s += '<rect x="' + x + '" y="' + y + '" width="' + Sp + '" height="' + Sp + '" fill="#ef4d66" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>';
+    if (C > 4) s += '<rect x="' + (x + (Sp - C) / 2) + '" y="' + (y + (Sp - C) / 2) + '" width="' + C + '" height="' + C + '" fill="#f4efe2"/>';
+    s += '<text x="' + (x + Sp / 2) + '" y="' + (y - 10) + '" text-anchor="middle" font-size="14" fill="#8b95a1">切面(俯视) · 棱长 ' + L + 'cm</text>';
+    /* 标尺 */
+    var ry = y + Sp + 34, n10 = L * 10, k;
+    s += '<line x1="' + x + '" y1="' + ry + '" x2="' + (x + Sp) + '" y2="' + ry + '" stroke="#8b95a1" stroke-width="2"/>';
+    for (k = 0; k <= n10; k++) {
+      var tx = x + Sp * k / n10, major = k % 10 === 0, mid = k % 5 === 0;
+      s += '<line x1="' + tx + '" y1="' + ry + '" x2="' + tx + '" y2="' + (ry + (major ? 12 : mid ? 8 : 5)) + '" stroke="#8b95a1" stroke-width="' + (major ? 2 : 1) + '"/>';
+      if (major || (L <= 1 && k % 5 === 0)) s += '<text x="' + tx + '" y="' + (ry + 30) + '" text-anchor="middle" font-size="13" fill="#77828d">' + (k / 10) + '</text>';
+    }
+    s += '<text x="' + (x + Sp) + '" y="' + (ry + 30) + '" text-anchor="middle" font-size="13" fill="#77828d">cm</text>';
+    /* 测量线 + 括线 */
+    s += '<line id="mkLine" x1="0" y1="' + y + '" x2="0" y2="' + (y + Sp) + '" stroke="#b8e04e" stroke-width="2.5"/>';
+    s += '<line id="mkLeft" x1="' + x + '" y1="' + (y + Sp + 8) + '" x2="0" y2="' + (y + Sp + 8) + '" stroke="#b8e04e" stroke-width="2"/>';
+    s += '<circle id="mkDot" cx="0" cy="' + (y + Sp / 2) + '" r="7" fill="#b8e04e" stroke="#16220a" stroke-width="2.5"/>';
+    s += '<text id="mkTxt" x="0" y="' + (y + Sp - 10) + '" text-anchor="middle" font-size="17" font-weight="700" fill="#b8e04e"></text>';
+    var host = byId('msvg');
+    host.setAttribute('viewBox', '0 0 ' + w + ' ' + hgt);
+    host.setAttribute('width', '500');
+    host.setAttribute('height', String(Math.round(500 * hgt / w)));
+    host.innerHTML = s;
+    byId('mTitle').textContent = '测量扩散深度 · 棱长 ' + L + 'cm 琼脂块';
+    var tabs = byId('mtabs').children;
+    for (var t = 0; t < tabs.length; t++) tabs[t].className = (t === i ? 'active' : '');
+    byId('btnAlign').textContent = '对齐到边界(模拟值 ' + d.toFixed(2) + ' cm)';
+    updateMarker();
+  }
+
+  function updateMarker() {
+    var i = mCur, L = CUBES[i].L;
+    var cm = Math.max(0, Math.min(L, S.marker[i]));
+    var svg = byId('msvg');
+    var x = 40 + cm * MPC, y = 26, Sp = L * MPC;
+    var line = byId('mkLine'), left = byId('mkLeft'), dot = byId('mkDot'), txt = byId('mkTxt');
+    if (!line) return;
+    line.setAttribute('x1', x); line.setAttribute('x2', x);
+    left.setAttribute('x2', x);
+    dot.setAttribute('cx', x);
+    txt.setAttribute('x', x);
+    txt.textContent = cm.toFixed(2) + ' cm';
+    byId('mRead').textContent = cm.toFixed(2) + ' cm';
+  }
+
+  function bindModalDrag() {
+    var svg = byId('msvg'), dragging = false;
+    function setFromEvent(e) {
+      var L = CUBES[mCur].L;
+      var r = svg.getBoundingClientRect();
+      var sx = (e.clientX - r.left) / r.width * svg.viewBox.baseVal.width;
+      var cm = (sx - 40) / MPC;
+      S.marker[mCur] = Math.max(0, Math.min(L, cm));
+      updateMarker();
+    }
+    svg.addEventListener('pointerdown', function (e) { dragging = true; svg.setPointerCapture(e.pointerId); setFromEvent(e); });
+    svg.addEventListener('pointermove', function (e) { if (dragging) setFromEvent(e); });
+    svg.addEventListener('pointerup', function () { dragging = false; });
+    svg.addEventListener('pointercancel', function () { dragging = false; });
+  }
+
+  function openMeasure(i) {
+    if (!S.cut) { toast('请先点击「切开」,取出琼脂块'); return; }
+    if (S.marker[i] == null) S.marker[i] = 0;
+    renderModal(i);
+    byId('mask').classList.add('show');
+  }
+  function closeMeasure() { byId('mask').classList.remove('show'); }
+
+  function recordDepth() {
+    var i = mCur;
+    var v = Math.round(Math.max(0, Math.min(CUBES[i].L, S.marker[i])) * 100) / 100;
+    S.depth[i] = v;
+    boardLabel(i);
+    updateStatus();
+    renderTable();
+    updateCharts();
+    var n = S.depth.filter(function (x) { return x != null; }).length;
+    if (n === 3) toast('三块都记录完毕!点击右上角「数据统计」查看规律');
+    else toast('已记录 ' + CUBES[i].L + 'cm 块:' + v.toFixed(2) + ' cm');
+    closeMeasure();
+  }
+
+  /* ================= 时间与播放 ================= */
+  var lastTs = null;
+  function loop(ts) {
+    if (S.playing && lastTs != null) {
+      S.t = Math.min(MAXT, S.t + (ts - lastTs) / 1000 * S.speed);
+      if (S.t >= MAXT) {
+        S.playing = false;
+        byId('btnPlay').textContent = '▶';
+        toast('⏱ 10 分钟计时完成!取出琼脂块,点击「切开」');
+      }
+      syncTime();
+    }
+    lastTs = ts;
+    requestAnimationFrame(loop);
+  }
+
+  function syncTime() {
+    var v = Math.round(S.t);
+    byId('clockNow').textContent = fmt(v);
+    var sc = byId('scrub');
+    sc.value = String(v);
+    sc.style.setProperty('--p', String(v / 6));
+    for (var i = 0; i < 3; i++) {
+      var a = byId('arw' + i);
+      if (a && !S.cut) a.setAttribute('opacity', v >= MAXT ? '0.55' : (v > 0 ? '0.3' : '0.14'));
+    }
+    updateSoak();
+    updateStatus();
+    updateSteps();
+  }
+
+  /* ================= 步骤 / 状态 ================= */
+  function setStep(id, mode) {
+    var el = byId(id);
+    el.className = 'step' + (mode === 'done' ? ' done' : mode === 'active' ? ' active' : '');
+    if (mode === 'done') el.children[0].innerHTML = '<i>✓</i>';
+    else el.children[0].textContent = id.slice(2);
+  }
+  function updateSteps() {
+    var measured = S.depth.filter(function (x) { return x != null; }).length;
+    if (S.t >= MAXT) { setStep('st2', 'done'); setStep('st3', S.cut ? 'done' : 'active'); }
+    else { setStep('st2', S.t > 0 ? 'active' : ''); setStep('st3', ''); }
+    if (S.cut) { setStep('st3', 'done'); setStep('st4', measured === 3 ? 'done' : 'active'); }
+    else setStep('st4', '');
+  }
+  function updateStatus() {
+    var v = Math.round(S.t);
+    byId('vTime').textContent = fmt(v) + ' / 10:00';
+    if (S.cut) {
+      byId('labTime').textContent = '实验用时';
+      byId('vTime').textContent = fmt(Math.round(S.t)) + ' / 10:00';
+      byId('labDep').textContent = '切开时扩散深度';
+      byId('vDep').textContent = S.dCut.toFixed(2) + ' cm';
+    } else {
+      byId('labDep').textContent = '当前扩散深度';
+      byId('vDep').textContent = depthAt(S.t).toFixed(2) + ' cm';
+    }
+    var n = S.depth.filter(function (x) { return x != null; }).length;
+    byId('vDone').textContent = n + ' / 3';
+  }
+
+  /* ================= 数据统计板块 ================= */
+  function cellHTML(kind, i) {
+    var c = CUBES[i];
+    if (kind === 'sa') return '<td class="rev' + (revealed.sa ? ' on' : '') + '" data-k="sa"><span class="ghost">?</span><span class="val">' + c.SA + '</span></td>';
+    if (kind === 'v') return '<td class="rev' + (revealed.v ? ' on' : '') + '" data-k="v"><span class="ghost">?</span><span class="val">' + c.V + '</span></td>';
+    if (kind === 'sv') return '<td class="rev' + (revealed.sv ? ' on' : '') + '" data-k="sv"><span class="ghost">?</span><span class="val">' + c.SV + '</span></td>';
+    return '';
+  }
+  function renderTable() {
+    var h = '<tr><th>棱长/cm</th><th>表面积/cm²</th><th>体积/cm³</th><th>表面积与<br>体积之比</th><th>扩散深度/cm</th></tr>';
+    for (var i = 0; i < 3; i++) {
+      h += '<tr><td class="fix">' + CUBES[i].L + '</td>' + cellHTML('sa', i) + cellHTML('v', i) + cellHTML('sv', i);
+      h += S.depth[i] != null
+        ? '<td class="dep got">' + S.depth[i].toFixed(2) + '</td>'
+        : '<td class="dep">待测量</td>';
+      h += '</tr>';
+    }
+    byId('tbl').innerHTML = h;
+  }
+
+  function barChart(vals, labels, tops, maxV, shown, animIdx) {
+    var W = 710, H = 245, bw = 104, gap = 84;
+    var x0 = (W - (3 * bw + 2 * gap)) / 2, base = 185, top = 46;
+    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+    var gl;
+    for (gl = 1; gl <= 3; gl++) {
+      var gy = base - (base - top) * gl / 3;
+      s += '<line x1="' + (x0 - 34) + '" y1="' + gy + '" x2="' + (W - x0 + 34) + '" y2="' + gy + '" stroke="rgba(255,255,255,.07)" stroke-width="1"/>';
+    }
+    s += '<line x1="' + (x0 - 34) + '" y1="' + base + '" x2="' + (W - x0 + 34) + '" y2="' + base + '" stroke="rgba(255,255,255,.2)" stroke-width="2"/>';
+    for (var i = 0; i < 3; i++) {
+      var x = x0 + i * (bw + gap);
+      if (i >= shown || vals[i] == null) {
+        var gh = 22;
+        s += '<rect class="ghostbox" x="' + x + '" y="' + (base - gh) + '" width="' + bw + '" height="' + gh + '" rx="7" fill="none" stroke="#3a4450" stroke-dasharray="6 5" stroke-width="2"/>';
+        s += '<text x="' + (x + bw / 2) + '" y="' + (base - gh - 12) + '" text-anchor="middle" font-size="20" fill="#5c6772">?</text>';
+      } else {
+        var bh = Math.max(8, (base - top) * vals[i] / maxV);
+        var anim = i >= animIdx;
+        var dl = (i - animIdx) * 0.12;
+        s += '<rect' + (anim ? ' class="barg" style="animation-delay:' + dl + 's"' : '') + ' x="' + x + '" y="' + (base - bh) + '" width="' + bw + '" height="' + bh + '" rx="7" fill="#b8e04e" opacity="' + (0.55 + 0.45 * vals[i] / maxV) + '"/>';
+        s += '<text' + (anim ? ' class="bnumg" style="animation-delay:' + (0.3 + dl) + 's"' : '') + ' x="' + (x + bw / 2) + '" y="' + (base - bh - 12) + '" text-anchor="middle" font-size="24" font-weight="800" fill="#e9f6cf">' + tops[i] + '</text>';
+      }
+      s += '<text x="' + (x + bw / 2) + '" y="' + (base + 32) + '" text-anchor="middle" font-size="17" fill="#9aa5ae">' + labels[i] + '</text>';
+    }
+    s += '</svg>';
+    return s;
+  }
+
+  function updateCharts(animC, animIdx) {
+    if (animC == null) animC = -1;
+    byId('chart1').innerHTML = barChart([2, 3, 6], ['3cm', '2cm', '1cm'], ['2:1', '3:1', '6:1'], 6, shown[0], animC === 0 ? animIdx : 99);
+    var vals = [], tops = [];
+    for (var i = 0; i < 3; i++) {
+      if (S.depth[i] == null) { vals.push(null); tops.push('?'); }
+      else {
+        var pc = redFrac(CUBES[i].L, S.depth[i]) * 100;
+        vals.push(pc); tops.push(Math.round(pc) + '%');
+      }
+    }
+    byId('chart2').innerHTML = barChart(vals, ['3cm', '2cm', '1cm'], tops, 100, shown[1], animC === 1 ? animIdx : 99);
+    byId('chart1').classList.toggle('done', shown[0] >= 3);
+    byId('chart2').classList.toggle('done', shown[1] >= 3);
+  }
+
+  /* ================= 图表点击逐根生成 ================= */
+  function depthsAllDone() { return S.depth[0] != null && S.depth[1] != null && S.depth[2] != null; }
+  function genChart(ci) {
+    if (shown[ci] >= 3) { toast('本图已全部生成'); return; }
+    if (ci === 1 && !depthsAllDone()) { toast('请先在「实验操作」中完成三块琼脂块的扩散深度测量'); return; }
+    shown[ci]++;
+    updateCharts(ci, shown[ci] - 1);
+  }
+
+  /* ================= 结论逐条呈现 ================= */
+  function applyConcl() {
+    var cn = document.querySelectorAll('#concl .cnode');
+    var ca = document.querySelectorAll('#concl .carrow');
+    for (var i = 0; i < cn.length; i++) cn[i].classList.toggle('on', i < clStep);
+    for (var a = 0; a < ca.length; a++) ca[a].classList.toggle('on', a < clStep - 1);
+    byId('clHint').classList.toggle('hide', clStep > 0);
+    byId('clNext').textContent = clStep >= 4 ? '已全部呈现' : '呈现下一条';
+    byId('clNext').disabled = clStep >= 4;
+  }
+
+  /* ================= 视图切换 / 全屏 / 缩放 ================= */
+  function switchView(v) {
+    S.view = v;
+    byId('viewOp').classList.toggle('show', v === 'op');
+    byId('viewData').classList.toggle('show', v === 'data');
+    var segs = document.querySelectorAll('.seg button');
+    for (var i = 0; i < segs.length; i++) segs[i].classList.toggle('active', segs[i].getAttribute('data-view') === v);
+    if (v === 'data') { renderTable(); updateCharts(); }
+  }
+
+  var stage = byId('stage');
+  function fit() {
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  function toggleFull() {
+    var d = document, el = d.documentElement;
+    var cur = d.fullscreenElement || d.webkitFullscreenElement;
+    if (cur) {
+      if (d.exitFullscreen) d.exitFullscreen(); else if (d.webkitExitFullscreen) d.webkitExitFullscreen();
+    } else {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+  }
+
+  /* ================= toast ================= */
+  var toastTimer = null;
+  function toast(msg) {
+    var t = byId('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2800);
+  }
+
+  /* ================= 重置 ================= */
+  function reset() {
+    closeMeasure();
+    S.t = 0; S.playing = false; S.speed = S.speed || 30; S.cut = false; S.dCut = 0;
+    S.depth = [null, null, null]; S.marker = [0, 0, 0];
+    revealed = { sa: false, v: false, sv: false };
+    shown = [0, 0];
+    clStep = 0;
+    applyConcl();
+    byId('btnPlay').textContent = '▶';
+    byId('scrub').value = '0';
+    buildScene();
+    syncTime();
+    renderTable();
+    updateCharts();
+    updateStatus();
+    toast('已重置实验');
+  }
+
+  /* ================= 事件绑定 ================= */
+  byId('btnPlay').addEventListener('click', function () {
+    if (S.t >= MAXT) { toast('计时已到 10 分钟,拖动时间轴可回放'); return; }
+    S.playing = !S.playing;
+    this.textContent = S.playing ? '❙❙' : '▶';
+  });
+  byId('scrub').addEventListener('input', function () {
+    S.t = +this.value;
+    syncTime();
+  });
+  var spBtns = document.querySelectorAll('.speed button');
+  for (var si = 0; si < spBtns.length; si++) {
+    spBtns[si].addEventListener('click', function () {
+      S.speed = +this.getAttribute('data-sp');
+      for (var j = 0; j < spBtns.length; j++) spBtns[j].classList.remove('active');
+      this.classList.add('active');
+    });
+  }
+  byId('btnCut').addEventListener('click', doCut);
+  byId('btnMeasure').addEventListener('click', function () {
+    var first = 0;
+    for (var i = 0; i < 3; i++) { if (S.depth[i] == null) { first = i; break; } }
+    openMeasure(first);
+  });
+  byId('btnXray').addEventListener('click', function () {
+    S.xray = !S.xray;
+    this.classList.toggle('on', S.xray);
+    if (S.cut) toast('琼脂块已取出,透视仅对烧杯浸泡阶段有效');
+    updateSoak();
+  });
+  byId('btnReset').addEventListener('click', reset);
+  byId('btnGoData').addEventListener('click', function () { switchView('data'); });
+
+  var segs = document.querySelectorAll('.seg button');
+  for (var gi = 0; gi < segs.length; gi++) {
+    segs[gi].addEventListener('click', function () { switchView(this.getAttribute('data-view')); });
+  }
+  byId('btnFull').addEventListener('click', toggleFull);
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    if (e.key === 'f' || e.key === 'F') toggleFull();
+    if (e.key === ' ') { e.preventDefault(); byId('btnPlay').click(); }
+  });
+
+  /* 表格点击逐步显示 */
+  byId('tbl').addEventListener('click', function (e) {
+    var td = e.target.closest('td.rev');
+    if (!td) return;
+    revealed[td.getAttribute('data-k')] = true;
+    renderTable();
+  });
+  byId('btnAll').addEventListener('click', function () {
+    revealed = { sa: true, v: true, sv: true };
+    renderTable();
+  });
+
+  /* 图表:点击逐根生成 / 全部生成 / 重置 */
+  byId('chart1').addEventListener('click', function () { genChart(0); });
+  byId('chart2').addEventListener('click', function () { genChart(1); });
+  byId('c1All').addEventListener('click', function () { shown[0] = 3; updateCharts(0, 0); });
+  byId('c2All').addEventListener('click', function () {
+    if (!depthsAllDone()) { toast('请先在「实验操作」中完成三块琼脂块的扩散深度测量'); return; }
+    shown[1] = 3; updateCharts(1, 0);
+  });
+  byId('c1Rst').addEventListener('click', function () { shown[0] = 0; updateCharts(); });
+  byId('c2Rst').addEventListener('click', function () { shown[1] = 0; updateCharts(); });
+
+  /* 结论栏:逐条呈现 / 全部显示 / 重新隐藏 */
+  byId('clNext').addEventListener('click', function () { if (clStep < 4) { clStep++; applyConcl(); } });
+  byId('clAll').addEventListener('click', function () { clStep = 4; applyConcl(); });
+  byId('clReset').addEventListener('click', function () { clStep = 0; applyConcl(); });
+  var ansBtns = document.querySelectorAll('.qa button');
+  for (var ai = 0; ai < ansBtns.length; ai++) {
+    ansBtns[ai].addEventListener('click', function () {
+      var a = byId(this.getAttribute('data-ans'));
+      a.classList.toggle('show');
+      this.textContent = a.classList.contains('show') ? '收起答案' : '查看参考答案';
+    });
+  }
+
+  /* 场景点击:点切块打开测量 */
+  byId('scene').addEventListener('click', function (e) {
+    for (var i = 0; i < 3; i++) {
+      var g = byId('gBoard' + i);
+      if (g && g.style.display !== 'none' && g.contains(e.target)) { openMeasure(i); return; }
+    }
+  });
+
+  /* 弹窗事件 */
+  var mtabs = byId('mtabs').children;
+  for (var mi = 0; mi < mtabs.length; mi++) {
+    mtabs[mi].addEventListener('click', function () { renderModal(+this.getAttribute('data-mi')); });
+  }
+  byId('btnAlign').addEventListener('click', function () {
+    S.marker[mCur] = S.dCut;
+    updateMarker();
+  });
+  byId('btnRecord').addEventListener('click', recordDepth);
+  byId('btnMClose').addEventListener('click', closeMeasure);
+  byId('btnMClose2').addEventListener('click', closeMeasure);
+  byId('mask').addEventListener('click', function (e) { if (e.target === this) closeMeasure(); });
+
+  window.addEventListener('resize', fit);
+  document.addEventListener('fullscreenchange', fit);
+  document.addEventListener('webkitfullscreenchange', fit);
+
+  /* ================= 启动 ================= */
+  buildScene();
+  bindModalDrag();
+  renderTable();
+  updateCharts();
+  applyConcl();
+  syncTime();
+  updateStatus();
+  fit();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
