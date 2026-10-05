@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>通用植物细胞模型 · 单项预览</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">叶片结构模型库 · 模型 01</p>
+      <h1>可参数化通用植物细胞</h1>
+      <p>当前仅用于模型外观与参数能力确认，尚未进入组织搭建。</p>
+    </div>
+    <div class="status">已实现 · 待视觉确认</div>
+  </header>
+
+  <main class="workspace">
+    <aside id="shape-panel" class="panel description-panel">
+      <div class="panel-heading">
+        <h2>形态选择</h2>
+        <button class="drawer-close" data-close-drawer="shape-panel" aria-label="关闭形态面板">关闭</button>
+      </div>
+      <h3>模型构成</h3>
+      <ul>
+        <li>透明细胞壁与内部细胞质层</li>
+        <li>可选中央液泡和细胞核</li>
+        <li>数量、大小可调的叶绿体</li>
+        <li>六向连接点与中心锚点</li>
+        <li>独立选取范围和序列化接口</li>
+      </ul>
+
+      <h3>形态试验</h3>
+      <div class="preset-grid">
+        <button data-preset="flat">扁平形态</button>
+        <button data-preset="column">柱状形态</button>
+        <button data-preset="sphere">球形</button>
+        <button data-preset="irregular">不规则形</button>
+      </div>
+
+      <div class="diagnostic-options">
+        <label><input id="show-bounds" type="checkbox"> 显示包围盒</label>
+        <label><input id="show-anchors" type="checkbox"> 显示连接点</label>
+      </div>
+
+      <p class="hint">拖动画面旋转观察；滚轮缩放。预设只用于测试参数范围，不代表标准组织答案。</p>
+    </aside>
+
+    <section class="stage-card">
+      <div class="stage-actions">
+        <button id="toggle-shapes" class="drawer-trigger" data-open-drawer="shape-panel">形态</button>
+        <button id="reset-view" class="quiet">复位视图</button>
+        <button id="toggle-parameters" class="drawer-trigger" data-open-drawer="parameter-panel">参数</button>
+      </div>
+      <div id="model-stage" aria-label="通用植物细胞三维预览"></div>
+      <div class="stage-caption">细胞中心为模型原点，黄色框为真实包围盒，连接点用于后续复制和吸附。</div>
+    </section>
+
+    <aside id="parameter-panel" class="panel control-panel">
+      <div class="panel-heading">
+        <h2>模型参数</h2>
+        <div class="panel-actions">
+          <button id="reset-model" class="quiet">恢复默认</button>
+          <button class="drawer-close" data-close-drawer="parameter-panel" aria-label="关闭参数面板">关闭</button>
+        </div>
+      </div>
+
+      <label class="control">宽度 <output data-value="width"></output><input data-parameter="width" type="range" min="1.4" max="7" step="0.1"></label>
+      <label class="control">高度 <output data-value="height"></output><input data-parameter="height" type="range" min="0.8" max="7" step="0.1"></label>
+      <label class="control">叶绿体数量 <output data-value="chloroplastCount"></output><input data-parameter="chloroplastCount" type="range" min="0" max="48" step="1"></label>
+      <p class="parameter-note">叶绿体大小保持适中；细胞整体绿色程度随叶绿体数量自动变化。</p>
+
+      <details>
+        <summary>查看模型数据</summary>
+        <pre id="model-data"></pre>
+      </details>
+    </aside>
+  </main>
+
+  <button id="drawer-scrim" aria-label="关闭侧边面板"></button>
+  <script type="module" src="./js/plant-cell-preview.js"></script>
+</body>
+</html>

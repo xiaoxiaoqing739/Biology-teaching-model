@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>上表皮模型 · 单项预览</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">叶片结构模型库 · 模型 02</p>
+      <h1>可编辑上表皮模型</h1>
+      <p>比较规则砖状与镶嵌状表皮，并观察少量上表皮气孔。</p>
+    </div>
+    <div class="status">已实现 · 待视觉确认</div>
+  </header>
+
+  <main class="workspace">
+    <aside id="shape-panel" class="panel description-panel">
+      <div class="panel-heading">
+        <h2>模型说明</h2>
+        <button class="drawer-close" data-close-drawer="shape-panel" aria-label="关闭说明面板">关闭</button>
+      </div>
+      <ul>
+        <li>只包含一层表皮细胞</li>
+        <li>支持规则砖状与镶嵌状两种排列</li>
+        <li>每个细胞均来自已确认的通用细胞</li>
+        <li>整层可以移动、复制和保存</li>
+        <li>可拆分为独立细胞供后续搭建</li>
+          <li>设置 0–3 个上表皮气孔安装位</li>
+      </ul>
+      <h3>当前细胞总数</h3>
+      <div class="metric"><strong id="cell-count">53</strong><span>个</span></div>
+      <h3>上表皮气孔</h3>
+      <div class="metric"><strong id="slot-count">1</strong><span>个</span></div>
+      <div class="diagnostic-options">
+        <label><input id="show-bounds" type="checkbox"> 显示包围盒</label>
+        <label><input id="show-anchors" type="checkbox"> 显示连接点</label>
+      </div>
+      <p class="hint">拖动画面旋转观察；滚轮缩放。气孔由已确认的保卫细胞模型安装在表皮预留位中。</p>
+    </aside>
+
+    <section class="stage-card">
+      <div class="stage-actions">
+        <button class="drawer-trigger" data-open-drawer="shape-panel">说明</button>
+        <button id="reset-view" class="quiet">复位视图</button>
+        <button class="drawer-trigger" data-open-drawer="parameter-panel">参数</button>
+      </div>
+      <div id="model-stage" aria-label="上表皮三维模型预览"></div>
+      <div class="stage-caption">镶嵌模式使用相邻细胞共享边界，避免随机造型产生重叠或裂缝。</div>
+    </section>
+
+    <aside id="parameter-panel" class="panel control-panel">
+      <div class="panel-heading">
+        <h2>模型参数</h2>
+        <div class="panel-actions">
+          <button id="reset-model" class="quiet">恢复默认</button>
+          <button class="drawer-close" data-close-drawer="parameter-panel" aria-label="关闭参数面板">关闭</button>
+        </div>
+      </div>
+      <label class="control">横向细胞数 <output data-value="columns"></output><input data-parameter="columns" type="range" min="3" max="9" step="1"></label>
+      <label class="control">纵向细胞数 <output data-value="rows"></output><input data-parameter="rows" type="range" min="2" max="6" step="1"></label>
+      <label class="control">单细胞宽度 <output data-value="cellWidth"></output><input data-parameter="cellWidth" type="range" min="1.1" max="2.2" step="0.05"></label>
+      <label class="control">表皮厚度 <output data-value="layerThickness"></output><input data-parameter="layerThickness" type="range" min="0.38" max="1.05" step="0.01"></label>
+      <label class="control">排列方式 <output data-value="layoutMode"></output><select data-parameter="layoutMode"><option value="regular">规则砖状</option><option value="mosaic">镶嵌状</option></select></label>
+      <label class="control">上表皮气孔数量 <output data-value="stomaSlotCount"></output><input data-parameter="stomaSlotCount" type="range" min="0" max="3" step="1"></label>
+      <label class="control">叶绿体数量 <output data-value="chloroplastCount"></output><input data-parameter="chloroplastCount" type="range" min="0" max="24" step="1"></label>
+      <p class="parameter-note">普通表皮细胞默认不含叶绿体，但保留数量调节，以便学生表达并修改初始模型。</p>
+      <details>
+        <summary>查看模型数据</summary>
+        <pre id="model-data"></pre>
+      </details>
+    </aside>
+  </main>
+
+  <button id="drawer-scrim" aria-label="关闭侧边面板"></button>
+  <script type="module" src="./js/upper-epidermis-preview.js"></script>
+</body>
+</html>

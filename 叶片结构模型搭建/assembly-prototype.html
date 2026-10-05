@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>叶片结构模型搭建</title>
+  <link rel="stylesheet" href="./styles.css?v=13">
+</head>
+<body class="formal-builder">
+  <header class="topbar formal-topbar">
+    <div class="formal-title">
+      <p class="eyebrow">互动建模 · 课堂演示</p>
+      <h1>叶片结构模型搭建</h1>
+      <p>北师大版·七年级上册　|　第4章 第1节 光合作用</p>
+    </div>
+    <div class="formal-header-actions">
+      <div class="workflow-indicator" aria-label="建模流程">
+        <span data-stage-step="edit" class="is-active"><b>1</b>搭建模型</span>
+        <span data-stage-step="confirmed"><b>2</b>确认模型</span>
+        <span data-stage-step="interacting"><b>3</b>观察交互</span>
+      </div>
+      <button id="toggle-fullscreen" class="quiet">全屏</button>
+    </div>
+  </header>
+
+  <main class="assembly-editor">
+    <section class="stage-card assembly-stage">
+      <div class="editor-toolbar">
+        <button class="drawer-trigger" data-open-drawer="model-workshop">模型设置</button>
+        <button id="undo-action" class="quiet" disabled>撤销</button>
+        <button id="reset-view" class="quiet">复位视角</button>
+        <button id="clear-layers" class="quiet danger">清除中间组织</button>
+        <button id="confirm-model">确认模型</button>
+        <button id="start-interaction" class="is-hidden">开始交互</button>
+        <button id="back-to-edit" class="quiet is-hidden">返回修改</button>
+      </div>
+      <div id="model-stage" aria-label="叶片结构三维智能组装区"></div>
+      <div class="assembly-status"><strong id="assembly-message">请先安装上下表皮</strong><span id="layer-summary">叶肉 0 层</span></div>
+      <div class="stage-caption">拖动空白区域旋转整个叶片｜滚轮/双指缩放｜模型自动对齐，避免误触移动</div>
+    </section>
+
+    <aside id="model-workshop" class="panel control-panel model-workshop">
+      <div class="panel-heading">
+        <h2>模型设置</h2>
+        <button class="drawer-close" data-close-drawer="model-workshop" aria-label="关闭模型设置">关闭</button>
+      </div>
+
+      <section class="workshop-section">
+        <div class="fixed-grid-title"><strong>叶片表面规格</strong><span>固定一致</span></div>
+        <div class="surface-spec"><b>6</b><span>行</span><i>×</i><b>9</b><span>列</span><em>共 54 个单元</em></div>
+        <label class="control">上表皮排列 <output id="upper-layout-value">镶嵌状</output><select id="upper-layout-mode"><option value="regular">规则砖状</option><option value="mosaic" selected>波浪镶嵌状</option></select></label>
+        <label class="control">上表皮叶绿体数量 <output id="upper-chloroplast-value">0</output><input id="upper-chloroplast-count" type="range" min="0" max="24" step="1" value="0"></label>
+        <label class="control">上表皮气孔数量 <output id="upper-stoma-count-value">1</output><input id="upper-stoma-count" type="range" min="0" max="3" step="1" value="1"></label>
+        <label class="control">下表皮排列 <output id="lower-layout-value">镶嵌状</output><select id="lower-layout-mode"><option value="regular">规则砖状</option><option value="mosaic" selected>波浪镶嵌状</option></select></label>
+        <label class="control">下表皮叶绿体数量 <output id="lower-chloroplast-value">0</output><input id="lower-chloroplast-count" type="range" min="0" max="24" step="1" value="0"></label>
+        <label class="control">下表皮气孔数量 <output id="lower-stoma-count-value">6</output><input id="lower-stoma-count" type="range" min="0" max="10" step="1" value="6"></label>
+        <label class="control">叶脉 <output id="vein-size-value">粗</output><select id="vein-size"><option value="none">无</option><option value="0.72">细</option><option value="1">中</option><option value="1.32" selected>粗</option></select></label>
+        <button id="install-surfaces" class="primary-wide">安装／更新表皮与叶脉</button>
+      </section>
+
+      <section class="workshop-section">
+        <div class="panel-heading workshop-parameter-heading"><h3>叶肉细胞模型</h3><button id="reset-cell" class="quiet">恢复默认</button></div>
+        <div id="model-preview-card" class="model-preview-card live-preview">
+          <svg id="cell-preview-svg" viewBox="0 0 320 180" role="img" aria-label="随参数实时变化的细胞预览"></svg>
+          <div class="preview-drag-label"><strong>实时预览</strong><span>参数变化立即显示</span></div>
+        </div>
+        <label class="control">形态 <output id="shape-value">柱状</output><select id="cell-shape"><option value="column">柱状</option><option value="flat">扁平</option><option value="sphere">球形</option><option value="irregular">不规则形</option></select></label>
+        <label class="control">宽度 <output id="width-value">1.20</output><input id="cell-width" type="range" min="0.75" max="1.35" step="0.05" value="1.2"></label>
+        <label class="control">高度 <output id="height-value">1.80</output><input id="cell-height" type="range" min="0.7" max="2.2" step="0.05" value="1.8"></label>
+        <label class="control">叶绿体数量 <output id="chloroplast-value">18</output><input id="chloroplast-count" type="range" min="0" max="36" step="1" value="18"></label>
+      </section>
+
+      <section class="workshop-section tissue-layout-controls">
+        <div class="panel-heading workshop-parameter-heading"><h3>当前层铺设方式</h3><span id="current-layer-count" class="section-hint">当前 0/6 层</span></div>
+        <label class="control">铺设方式 <output id="fill-mode-value">规则铺满</output><select id="fill-mode"><option value="regular">规则铺满</option><option value="sparse">随机不铺满</option></select></label>
+        <label id="density-control" class="control is-muted">疏松密度 <output id="density-value">68%</output><input id="fill-density" type="range" min="40" max="88" step="4" value="68" disabled></label>
+      </section>
+
+      <div class="smart-fill-actions">
+        <button id="fill-first-layer">铺设第一层</button>
+        <button id="add-layer">纵向增加一层</button>
+        <button id="update-last-layer" class="quiet">用当前参数更新最下层</button>
+        <button id="rerandomize" class="quiet" disabled>重新随机当前层</button>
+        <button id="remove-layer" class="quiet danger">减少一层</button>
+      </div>
+      <p class="parameter-note">每次只增加一层。规则模式整齐铺满；随机模式按疏松度保留间隙。不同层可使用不同细胞参数与铺设方式。</p>
+      <details><summary>查看组装数据</summary><pre id="assembly-data"></pre></details>
+    </aside>
+
+    <aside id="interaction-panel" class="panel control-panel model-workshop interaction-panel is-hidden">
+      <div class="panel-heading"><div><p class="eyebrow">模型已锁定</p><h2>同步交互观察</h2></div></div>
+      <div class="interaction-summary"><strong id="interaction-state">等待开始</strong><span>叶脉运输与气孔活动同步演示</span></div>
+
+      <section class="workshop-section">
+        <h3>演示控制</h3>
+        <div class="interaction-actions">
+          <button id="pause-interaction">暂停</button>
+          <button id="replay-interaction" class="quiet">重新演示</button>
+        </div>
+        <label class="control">气孔打开程度 <output id="stoma-aperture-value">100% · 完全打开</output><input id="stoma-aperture" type="range" min="0" max="100" step="1" value="100"></label>
+        <div class="aperture-presets" aria-label="气孔打开程度快捷选择">
+          <button type="button" data-aperture="0" class="quiet">完全关闭</button>
+          <button type="button" data-aperture="50" class="quiet">打开一半</button>
+          <button type="button" data-aperture="100" class="is-active">完全打开</button>
+        </div>
+        <p class="interaction-note">气体只从两个保卫细胞之间的开孔进出；关闭时气孔通道交换近于零，极少量角质层交换未在本模型中显示。</p>
+        <label class="control">动画速度 <output id="interaction-speed-value">1×</output><select id="interaction-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+      </section>
+
+      <section class="workshop-section">
+        <h3>观察视角</h3>
+        <div class="view-actions">
+          <button data-view="front">正面整体</button>
+          <button data-view="overall" class="quiet">立体观察</button>
+          <button data-view="vein" class="quiet">叶脉特写</button>
+          <button data-view="stoma" class="quiet">气孔特写</button>
+        </div>
+      </section>
+
+      <section class="interaction-legend">
+        <p><i class="legend-dot water"></i><span>水和无机盐：沿木质部进入叶片</span></p>
+        <p><i class="legend-dot sugar"></i><span>有机物：沿韧皮部向外运输</span></p>
+        <p><i class="legend-dot co2"></i><span>二氧化碳：从气孔开孔进入</span></p>
+        <p><i class="legend-dot oxygen"></i><span>氧气：从气孔开孔排出</span></p>
+        <p><i class="legend-dot vapor"></i><span>水蒸气：从气孔开孔排出</span></p>
+      </section>
+    </aside>
+  </main>
+
+  <button id="drawer-scrim" aria-label="关闭侧边面板"></button>
+  <script type="module" src="./js/assembly-preview.js?v=13"></script>
+</body>
+</html>
