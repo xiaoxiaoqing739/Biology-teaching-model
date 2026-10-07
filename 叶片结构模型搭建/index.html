@@ -78926,8 +78926,8 @@ const THREE=m1;
 
 const DEFAULTS = Object.freeze({
   veinSize: 1.32,
-  xylemCount: 7,
-  phloemCount: 7,
+  xylemCount: 6,
+  phloemCount: 6,
 });
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -78984,17 +78984,16 @@ function ellipticalClusterPositions(count, {centerY, radiusY, radiusZ, phase = 0
   return positions;
 }
 
-function sevenTubePacking(radius, centerY) {
+function sixTubePacking(radius, centerY, topRowCount) {
   const horizontalStep = radius * 2.06;
   const verticalStep = Math.sqrt(3) * radius * 1.03;
+  const row = (count, y) => Array.from({length: count}, (_, index) => ({
+    y,
+    z: (index - (count - 1) * 0.5) * horizontalStep,
+  }));
   return [
-    {y: centerY + verticalStep, z: -horizontalStep * 0.5},
-    {y: centerY + verticalStep, z: horizontalStep * 0.5},
-    {y: centerY, z: -horizontalStep},
-    {y: centerY, z: 0},
-    {y: centerY, z: horizontalStep},
-    {y: centerY - verticalStep, z: -horizontalStep * 0.5},
-    {y: centerY - verticalStep, z: horizontalStep * 0.5},
+    ...row(topRowCount, centerY + verticalStep * 0.5),
+    ...row(6 - topRowCount, centerY - verticalStep * 0.5),
   ];
 }
 
@@ -79002,7 +79001,7 @@ function createLeafVein(initialParameters = {}) {
   const root = new THREE.Group();
   root.name = 'LeafVeinVascularBundle';
   root.userData.modelType = 'leaf-vein';
-  root.userData.modelVersion = 2;
+  root.userData.modelVersion = 3;
 
   const visual = new THREE.Group();
   visual.name = 'LeafVeinVisual';
@@ -79083,13 +79082,14 @@ function createLeafVein(initialParameters = {}) {
 
     const xylemRadius = 0.14 * size.scale;
     const phloemRadius = 0.115 * size.scale;
+    const conduitLength = size.length * 0.86;
     const groupGap = 0.035 * size.scale;
-    const xylemHalfHeight = Math.sqrt(3) * xylemRadius * 1.03 + xylemRadius;
-    const phloemHalfHeight = Math.sqrt(3) * phloemRadius * 1.03 + phloemRadius;
+    const xylemHalfHeight = Math.sqrt(3) * xylemRadius * 1.03 * 0.5 + xylemRadius;
+    const phloemHalfHeight = Math.sqrt(3) * phloemRadius * 1.03 * 0.5 + phloemRadius;
     const xylemCenterY = groupGap * 0.5 + xylemHalfHeight;
     const phloemCenterY = -groupGap * 0.5 - phloemHalfHeight;
-    const xylemPositions = parameters.xylemCount === 7
-      ? sevenTubePacking(xylemRadius, xylemCenterY)
+    const xylemPositions = parameters.xylemCount === 6
+      ? sixTubePacking(xylemRadius, xylemCenterY, 2)
       : ellipticalClusterPositions(parameters.xylemCount, {
         centerY: xylemCenterY,
         radiusY: xylemHalfHeight * 0.62,
@@ -79099,7 +79099,7 @@ function createLeafVein(initialParameters = {}) {
     xylemTubes = xylemPositions.map((position, index) => {
       const tube = createTube({
         name: `XylemVessel_${index + 1}`,
-        length: size.length * 0.87,
+        length: conduitLength,
         radius: xylemRadius,
         color: 0xd7765e,
         opacity: 0.94,
@@ -79114,8 +79114,8 @@ function createLeafVein(initialParameters = {}) {
       return tube;
     });
 
-    const phloemPositions = parameters.phloemCount === 7
-      ? sevenTubePacking(phloemRadius, phloemCenterY)
+    const phloemPositions = parameters.phloemCount === 6
+      ? sixTubePacking(phloemRadius, phloemCenterY, 4)
       : ellipticalClusterPositions(parameters.phloemCount, {
         centerY: phloemCenterY,
         radiusY: phloemHalfHeight * 0.62,
@@ -79125,7 +79125,7 @@ function createLeafVein(initialParameters = {}) {
     phloemTubes = phloemPositions.map((position, index) => {
       const tube = createTube({
         name: `PhloemSieveTube_${index + 1}`,
-        length: size.length * 0.82,
+        length: conduitLength,
         radius: phloemRadius,
         color: 0x6a86c8,
         opacity: 0.92,
@@ -79406,7 +79406,7 @@ function installVein(config) {
   disposeVein();
   if (config.veinSize === 'none') return;
   const size = Number(config.veinSize);
-  veinApi = createLeafVein({veinSize: size, xylemCount: 7, phloemCount: 7});
+  veinApi = createLeafVein({veinSize: size, xylemCount: 6, phloemCount: 6});
   const surfaceWidth = GRID.columns * GRID.cellWidth + (GRID.columns - 1) * GRID.gap;
   veinApi.root.scale.x = surfaceWidth / (5.2 * size);
   veinApi.root.position.set(0, 0, 0);
