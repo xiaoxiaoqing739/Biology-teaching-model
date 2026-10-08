@@ -194,6 +194,7 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
           <button class="pill" id="btnCut">切开</button>
           <button class="pill" id="btnMeasure">测量</button>
           <button class="pill" id="btnXray">透视核心</button>
+          <button class="pill" id="btnSection">横截面模拟</button>
           <button class="pill warn" id="btnReset">重置</button>
           <span class="tool-hint">点击烧杯下方的切块可直接测量 · 拖动时间轴可快进</span>
         </div>
@@ -319,7 +320,7 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
     { L: 1, SA: 6,  V: 1,  SV: '6:1' }
   ];
   var MAXT = 600, FD = 0.5, PX = 60; /* 60px = 1cm(切割台) */
-  var S = { t: 0, playing: false, speed: 30, cut: false, dCut: 0, xray: false,
+  var S = { t: 0, playing: false, speed: 30, cut: false, dCut: 0, xray: false, section: false,
             depth: [null, null, null], marker: [0, 0, 0], view: 'op' };
   var revealed = { sa: false, v: false, sv: false };
   var shown = [0, 0];   /* [0]=S/V 图已生成柱数, [1]=变红比例图已生成柱数 */
@@ -351,18 +352,48 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
   function isoCube(cx, baseY, s) {
     var a = s * 0.62, b = s * 0.31, h = s * 0.62;
     var P0 = [cx, baseY], P1 = [cx + a, baseY - b], P2 = [cx - a, baseY - b];
+    var P3 = [cx, baseY - 2 * b];
     var T0 = [cx, baseY - h], T1 = [cx + a, baseY - b - h], T2 = [cx - a, baseY - b - h];
     var T3 = [cx, baseY - h - 2 * b];
     return {
       top: poly([T0, T1, T3, T2]),
       right: poly([P0, P1, T1, T0]),
-      left: poly([P2, P0, T0, T2])
+      left: poly([P2, P0, T0, T2]),
+      bottom: poly([P2, P3, P1, P0]),
+      backRight: poly([P3, T3, T1, P1]),
+      backLeft: poly([P2, T2, T3, P3])
     };
+  }
+  function centeredIsoCube(cx, baseY, outerS, innerS) {
+    /* 内外立方体共享同一个三维中心，不能只在原位置缩小 */
+    return isoCube(cx, baseY - 0.62 * (outerS - innerS), innerS);
   }
   function cubeFaces(g, c) {
     return '<polygon points="' + g.top + '" fill="' + c.top + '"/>' +
            '<polygon points="' + g.right + '" fill="' + c.right + '"/>' +
            '<polygon points="' + g.left + '" fill="' + c.left + '"/>';
+  }
+  function xrayBackFaces(g) {
+    return '<polygon points="' + g.bottom + '" fill="#b93650"/>' +
+           '<polygon points="' + g.backRight + '" fill="#d0475e"/>' +
+           '<polygon points="' + g.backLeft + '" fill="#b93b53"/>';
+  }
+  function xrayOutline(g) {
+    return '<polygon points="' + g.top + '" fill="none" stroke="rgba(255,151,165,.7)" stroke-width="1.4"/>' +
+           '<polygon points="' + g.right + '" fill="none" stroke="rgba(255,122,143,.65)" stroke-width="1.4"/>' +
+           '<polygon points="' + g.left + '" fill="none" stroke="rgba(226,83,105,.65)" stroke-width="1.4"/>';
+  }
+  function sectionSquare(i, d) {
+    var L = CUBES[i].L;
+    var Sp = CUBE_S[i] * 1.05;
+    var C = coreSide(L, d) / L * Sp;
+    var cy = (BB - 14) - 0.62 * CUBE_S[i];
+    var x = BX[i] - Sp / 2, y = cy - Sp / 2;
+    var h = '<rect x="' + x + '" y="' + y + '" width="' + Sp + '" height="' + Sp + '" fill="#ef4d66" stroke="rgba(255,255,255,.32)" stroke-width="1.5"/>';
+    if (C > 0.5) {
+      h += '<rect x="' + (x + (Sp - C) / 2) + '" y="' + (y + (Sp - C) / 2) + '" width="' + C + '" height="' + C + '" fill="#f4efe2"/>';
+    }
+    return h;
   }
   var PALE = { top: '#f6efdd', right: '#e9dfc6', left: '#d6c9a6' };
   var RED  = { top: '#ff8090', right: '#f0516a', left: '#cc3f57' };
@@ -399,21 +430,32 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
     for (var i = 0; i < 3; i++) {
       s += '<g id="bk' + i + '">' + beakerSVG(BX[i], i) + '</g>';
       s += '<g id="gSoak' + i + '">';
+      /* 普通观察图层：保持原有显示逻辑 */
+      s += '<g id="normal' + i + '">';
       s += '<g id="pale' + i + '">' + cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i]), PALE) + '</g>';
       s += '<g id="redg' + i + '" opacity="0">' + cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i]), RED) + '</g>';
+      s += '</g>';
+      /* 透视图层：后3面 → 居中核心 → 前3面，形成真正的内部透视关系 */
+      s += '<g id="xray' + i + '" opacity="0">';
+      s += '<g id="shellBack' + i + '" opacity=".42">' + xrayBackFaces(isoCube(BX[i], BB - 14, CUBE_S[i])) + '</g>';
       s += '<g id="core' + i + '" opacity="0"></g>';
+      s += '<g id="shellFront' + i + '" opacity=".68">' + cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i]), RED) + '</g>';
+      s += '<g id="shellEdge' + i + '">' + xrayOutline(isoCube(BX[i], BB - 14, CUBE_S[i])) + '</g>';
+      s += '</g>';
+      /* 中心横截面模拟图层 */
+      s += '<g id="section' + i + '" opacity="0"></g>';
       s += '</g>';
     }
 
     /* 取出箭头 */
     for (var j = 0; j < 3; j++) {
-      s += '<g id="arw' + j + '" opacity=".14">' +
+      s += '<g id="arw' + j + '" opacity="0">' +
         '<line x1="' + BX[j] + '" y1="356" x2="' + BX[j] + '" y2="398" stroke="#b8e04e" stroke-width="2" stroke-dasharray="5 6"/>' +
         '<path d="M' + (BX[j] - 6) + ' 392 L' + BX[j] + ' 404 L' + (BX[j] + 6) + ' 392" fill="none" stroke="#b8e04e" stroke-width="2"/></g>';
     }
 
     /* 切割台 */
-    s += '<rect x="70" y="402" width="1044" height="216" rx="16" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.14)" stroke-dasharray="8 7" stroke-width="1.5"/>';
+    s += '<rect x="70" y="402" width="1044" height="216" rx="16" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>';
     s += '<text x="92" y="430" font-size="15.5" fill="#77828d" letter-spacing="2">切割 · 测量台</text>';
     s += '<text id="hintCut" x="592" y="522" text-anchor="middle" font-size="16" fill="#6d7884" letter-spacing="1">10 分钟计时结束后 → 点击「切开」,取出琼脂块观察切面</text>';
 
@@ -443,15 +485,24 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
     for (var i = 0; i < 3; i++) {
       var g = byId('gSoak' + i);
       if (!g || S.cut) continue;
+      var normal = byId('normal' + i), xray = byId('xray' + i), section = byId('section' + i);
       var pale = byId('pale' + i), red = byId('redg' + i), core = byId('core' + i);
-      pale.setAttribute('opacity', S.xray ? '0.34' : '1');
-      red.setAttribute('opacity', S.xray ? String(p * 0.42) : String(p));
+
+      /* 未开启透视时完全沿用原来的表面颜色变化 */
+      normal.setAttribute('opacity', (S.xray || S.section) ? '0' : '1');
+      pale.setAttribute('opacity', '1');
+      red.setAttribute('opacity', String(p));
+      xray.setAttribute('opacity', S.xray ? '1' : '0');
+      section.setAttribute('opacity', S.section ? '1' : '0');
+      if (S.section) section.innerHTML = sectionSquare(i, depthAt(S.t));
+
       if (S.xray) {
         var d = depthAt(S.t);
         var cs = coreSide(CUBES[i].L, d) / CUBES[i].L;
         if (cs > 0.04) {
-          core.innerHTML = cubeFaces(isoCube(BX[i], BB - 14, CUBE_S[i] * cs), CORE);
-          core.setAttribute('opacity', '0.92');
+          core.innerHTML = cubeFaces(centeredIsoCube(BX[i], BB - 14, CUBE_S[i], CUBE_S[i] * cs), CORE);
+          /* 核心位于完整红色表面之后，以内部实体而非表面白色缺口呈现 */
+          core.setAttribute('opacity', '.82');
         } else { core.setAttribute('opacity', '0'); }
       } else core.setAttribute('opacity', '0');
     }
@@ -478,7 +529,7 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
       var wx = x + (Sp - C) / 2;
       h += '<rect x="' + wx + '" y="' + (y + (Sp - C) / 2) + '" width="' + Math.max(0, (x + half) - wx) + '" height="' + C + '" fill="#f4efe2"/>';
     }
-    h += '<rect x="' + x + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>';
+    h += '<rect x="' + x + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none"/>';
     h += '</g>';
     h += '<g id="hr' + i + '">';
     h += '<rect x="' + (x + half) + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="#ef4d66"/>';
@@ -486,7 +537,8 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
       var wx2 = x + half, w2 = Math.max(0, (x + (Sp + C) / 2) - wx2);
       h += '<rect x="' + wx2 + '" y="' + (y + (Sp - C) / 2) + '" width="' + w2 + '" height="' + C + '" fill="#f4efe2"/>';
     }
-    h += '<rect x="' + (x + half) + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>';
+    h += '<rect x="' + (x + half) + '" y="' + y + '" width="' + half + '" height="' + Sp + '" fill="none"/>';
+    h += '<rect x="' + x + '" y="' + y + '" width="' + Sp + '" height="' + Sp + '" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>';
     h += '</g>';
     h += '<line id="knife' + i + '" x1="' + (x + half) + '" y1="' + y + '" x2="' + (x + half) + '" y2="' + y + '" stroke="#eaf6d6" stroke-width="3" style="display:none"/>';
     h += '<text id="bl' + i + '" x="' + (x + half) + '" y="' + (y + Sp + 28) + '" text-anchor="middle" font-size="16.5" fill="#8b95a1"></text>';
@@ -531,12 +583,6 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
       k.setAttribute('opacity', String(p < .75 ? 1 : (1 - p) / .25));
     }, function () {
       k.style.display = 'none';
-      var l = byId('hl' + i), r = byId('hr' + i);
-      tw(380, function (p) {
-        var d = 10 * p;
-        l.setAttribute('transform', 'translate(' + (-d) + ',0)');
-        r.setAttribute('transform', 'translate(' + d + ',0)');
-      });
     });
   }
 
@@ -816,13 +862,15 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
   /* ================= 重置 ================= */
   function reset() {
     closeMeasure();
-    S.t = 0; S.playing = false; S.speed = S.speed || 30; S.cut = false; S.dCut = 0;
+    S.t = 0; S.playing = false; S.speed = S.speed || 30; S.cut = false; S.dCut = 0; S.xray = false; S.section = false;
     S.depth = [null, null, null]; S.marker = [0, 0, 0];
     revealed = { sa: false, v: false, sv: false };
     shown = [0, 0];
     clStep = 0;
     applyConcl();
     byId('btnPlay').textContent = '▶';
+    byId('btnXray').classList.remove('on');
+    byId('btnSection').classList.remove('on');
     byId('scrub').value = '0';
     buildScene();
     syncTime();
@@ -857,9 +905,23 @@ td.dep.got{color:#b8e04e;font-weight:700;background:rgba(184,224,78,.07)}
     openMeasure(first);
   });
   byId('btnXray').addEventListener('click', function () {
+    if (S.cut) { toast('琼脂块已取出,透视仅对烧杯浸泡阶段有效'); return; }
     S.xray = !S.xray;
+    if (S.xray) {
+      S.section = false;
+      byId('btnSection').classList.remove('on');
+    }
     this.classList.toggle('on', S.xray);
-    if (S.cut) toast('琼脂块已取出,透视仅对烧杯浸泡阶段有效');
+    updateSoak();
+  });
+  byId('btnSection').addEventListener('click', function () {
+    if (S.cut) { toast('琼脂块已切开,当前已是实际横截面'); return; }
+    S.section = !S.section;
+    if (S.section) {
+      S.xray = false;
+      byId('btnXray').classList.remove('on');
+    }
+    this.classList.toggle('on', S.section);
     updateSoak();
   });
   byId('btnReset').addEventListener('click', reset);
