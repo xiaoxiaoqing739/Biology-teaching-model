@@ -1,0 +1,39 @@
+:root { color-scheme: dark; font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; background: #111d22; color: #e7f4ed; }
+* { box-sizing: border-box; }
+body { height: 100vh; min-height: 100vh; margin: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; background: #111d22; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 28px; border-bottom: 1px solid rgba(133, 190, 181, .26); background: #101b20; }
+h1 { margin: 0; font-size: clamp(21px, 2.2vw, 34px); letter-spacing: .04em; }
+header p { margin: 7px 0 0; color: #a7c1b8; font-size: 13px; }
+button { border: 1px solid rgba(151, 208, 195, .58); border-radius: 10px; padding: 11px 16px; background: #23443f; color: #edf8f0; font: inherit; cursor: pointer; }
+button:hover { background: #35675a; }
+.header-controls { display: flex; align-items: center; gap: 12px; }
+.time-state { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid rgba(151, 208, 195, .38); border-radius: 10px; background: #17292e; color: #c8ded6; font-size: 12px; }
+.time-state output { color: #ffe3a9; font-variant-numeric: tabular-nums; }
+#advance-day { border-color: rgba(239, 194, 118, .66); background: #5c4a2b; color: #fff0c5; }
+#advance-day:hover:not(:disabled) { background: #796039; }
+#advance-day:disabled { cursor: progress; opacity: .72; }
+main { position: relative; min-height: 0; overflow: hidden; }
+#bench-scene { display: block; width: 100%; height: 100%; touch-action: none; background: radial-gradient(ellipse at 50% 40%, #35434a, #17242b 80%); }
+#zone-headings { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+#operation-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.zone-heading { position: absolute; min-width: 250px; padding: 10px 16px; transform: translate(-50%, -100%); border: 2px solid var(--zone-color); border-radius: 6px; background: rgba(10, 29, 35, .94); box-shadow: 0 8px 24px rgba(0, 0, 0, .28); text-align: center; }
+.zone-heading strong, .zone-heading span { display: block; }
+.zone-heading strong { color: #f2fffa; font-size: clamp(15px, 1.25vw, 20px); letter-spacing: .02em; white-space: nowrap; }
+.zone-heading span { margin-top: 4px; color: #c5ddd5; font-size: 12px; }
+.operation-title { position: absolute; transform: translate(-50%, -100%); min-width: 330px; padding: 9px 16px; border: 1px solid rgba(174, 229, 214, .72); border-radius: 9px; background: rgba(10, 29, 35, .94); color: #f0fff8; text-align: center; box-shadow: 0 8px 22px rgba(0, 0, 0, .25); }
+.operation-title strong, .operation-title span { display: block; }
+.operation-title strong { font-size: 17px; }
+.operation-title span { margin-top: 3px; color: #bdd4cc; font-size: 11px; }
+.operation-zone-label { position: absolute; transform: translate(-50%, -50%); min-width: 135px; padding: 6px 10px; border: 1px solid var(--operation-color); border-radius: 7px; background: rgba(13, 35, 40, .90); color: #eefbf6; text-align: center; font-size: 12px; white-space: nowrap; }
+.guide { position: absolute; z-index: 2; top: 16px; left: 24px; width: auto; padding: 8px 12px; border: 1px solid #557b76; border-radius: 999px; background: rgba(17, 42, 49, .92); pointer-events: none; }
+.guide strong { color: #a6e3cf; font-size: 13px; }
+.guide h2, .guide p { display: none; }
+footer { display: flex; align-items: center; gap: 20px; padding: 12px 24px; border-top: 1px solid rgba(133, 190, 181, .26); background: #101b20; }
+#bench-status { flex: 1; color: #b6d4c9; font-size: 13px; }
+#zone-summary { display: flex; gap: 9px; margin: 0; padding: 0; list-style: none; }
+#zone-summary li { min-width: 170px; padding: 7px 9px; border: 1px solid #466861; border-radius: 8px; background: #182c31; }
+#zone-summary strong, #zone-summary span { display: block; }
+#zone-summary strong { color: #e8f7f0; font-size: 12px; }
+#zone-summary span { margin-top: 3px; color: #9db9af; font-size: 11px; }
+@media (max-width: 960px) { header { align-items: flex-start; } .header-controls { flex-wrap: wrap; justify-content: flex-end; } footer { flex-wrap: wrap; gap: 8px; padding: 8px 12px; } #zone-summary { width: 100%; overflow-x: auto; } .guide { left: 14px; top: 12px; } .zone-heading { min-width: 190px; padding: 8px 10px; } .zone-heading strong { font-size: 13px; } .zone-heading span { font-size: 10px; } .operation-title { min-width: 260px; padding: 7px 10px; } .operation-title strong { font-size: 14px; } .operation-zone-label { min-width: 105px; font-size: 10px; } }
+@media (max-width: 650px) { header { padding: 12px 14px; } header p { font-size: 10px; } h1 { font-size: 18px; } .guide { padding: 7px 10px; } #bench-status { font-size: 11px; } #zone-summary li { min-width: 150px; } }

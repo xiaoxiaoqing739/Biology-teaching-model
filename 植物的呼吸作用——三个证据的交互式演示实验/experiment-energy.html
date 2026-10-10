@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验三 · 种子萌发时释放能量</title>
+  <link rel="stylesheet" href="./experiment-oxygen/experiment.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>植物的呼吸作用——三个证据的交互式演示实验</h1>
+    <nav><button id="fullscreen-toggle" type="button" aria-pressed="false">页面全屏</button><button id="reset-view" type="button">复位视图</button><button id="reset-experiment" type="button">重新实验</button></nav>
+  </header>
+  <main class="lab-shell">
+    <section class="viewport" aria-label="实验三三维交互场景">
+      <canvas id="experiment-scene"></canvas>
+      <nav class="experiment-switcher" aria-label="实验切换"><button type="button" data-experiment="oxygen">实验一 · 种子萌发时吸收氧气</button><button type="button" data-experiment="carbon-dioxide">实验二 · 种子萌发时释放二氧化碳</button><button class="active energy-active" type="button" data-experiment="energy" aria-current="page">实验三 · 种子萌发时释放能量</button></nav>
+      <div class="scene-status" aria-live="polite"><strong id="scene-phase">准备实验三</strong><span id="scene-hint">材料位于后方实验三材料区，点击开始后转移至操作台。</span></div>
+      <aside class="co2-detail energy-detail" id="energy-detail" hidden aria-live="polite">
+        <header><strong>温度计液柱同步细节</strong><div class="detail-actions"><span id="energy-detail-status">示意温度 · 等待计时</span><button class="detail-expand" id="energy-detail-expand" type="button" aria-expanded="false">放大细节</button></div></header>
+        <div class="co2-detail-grid">
+          <figure><canvas id="energy-detail-a"></canvas><figcaption>甲组 · 萌发种子　<output id="detail-temp-a">20.0 ℃</output></figcaption></figure>
+          <figure><canvas id="energy-detail-b"></canvas><figcaption>乙组 · 煮熟种子　<output id="detail-temp-b">20.0 ℃</output></figcaption></figure>
+        </div>
+        <div class="energy-progress"><span id="energy-progress-label">3—4 小时压缩演示：0 / 15 s</span><i><b id="energy-progress-bar"></b></i></div>
+      </aside>
+      <button class="start-overlay" id="start-experiment" type="button"><strong>开始实验三</strong><span>将实验三全部材料移至前方操作台</span></button>
+    </section>
+    <aside class="control-panel">
+      <div class="time-card"><span>实验时间</span><output id="time-output">0:00</output><button id="advance-time" type="button" disabled>3—4小时后</button></div>
+      <section class="current-step">
+        <div class="step-kicker"><span id="step-number">准备</span><em id="group-badge">甲乙两组</em></div>
+        <h2 id="step-title">材料陈列与转移</h2>
+        <p id="step-instruction">两组等量种子、保温瓶、温度计和密封塞将分别进入甲、乙操作区。</p>
+        <output id="action-feedback">尚未开始</output>
+      </section>
+      <section class="step-navigation" aria-label="实验步骤导航">
+        <div class="section-title"><strong>实验步骤</strong><span>跳转会重建完整前置状态</span></div>
+        <div class="step-buttons" id="energy-step-buttons">
+          <button type="button" data-step="0">1 材料转移</button><button type="button" data-step="1">2 甲组装种</button>
+          <button type="button" data-step="2">3 乙组装种</button><button type="button" data-step="3">4 放甲瓶塞</button>
+          <button type="button" data-step="4">5 插甲温度计</button><button type="button" data-step="5">6 放乙瓶塞</button>
+          <button type="button" data-step="6">7 插乙温度计</button><button type="button" data-step="7">8 计时观察</button>
+          <button type="button" data-step="8">9 温差比较</button>
+        </div>
+        <div class="jump-row"><button id="previous-step" type="button">上一步</button><button id="next-step" type="button">下一步</button></div>
+      </section>
+      <section class="observations">
+        <div class="section-title"><strong>示意温度记录</strong><span>同一状态同步驱动液柱</span></div>
+        <article id="status-a"><b>甲组 · 萌发种子</b><span id="temp-a">20.0 ℃</span></article>
+        <article id="status-b"><b>乙组 · 煮熟种子</b><span id="temp-b">20.0 ℃</span></article>
+      </section>
+      <section class="conclusion" id="conclusion" hidden><strong>实验结论</strong><p>甲组温度升高，说明萌发的种子进行呼吸作用时会释放能量；煮熟并冷却的种子不能正常进行呼吸作用，是对照组。</p><button id="finish-experiment" type="button">结束实验并归位</button></section>
+      <p class="view-help">拖动器材完成装种、插温度计和密封；拖动空白区域平移；滚轮缩放。温度为教学示意读数，步骤变化不会自动改变视角。</p>
+    </aside>
+  </main>
+  <script src="./offline/series-bridge.js"></script>
+  <script src="./offline/experiment-energy.js"></script>
+</body>
+</html>

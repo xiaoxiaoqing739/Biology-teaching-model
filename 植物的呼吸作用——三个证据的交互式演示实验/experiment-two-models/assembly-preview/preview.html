@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二 · 甲乙装置组装</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二装置整合 · 组装阶段</p><h1>甲、乙两套二氧化碳检验装置</h1></div>
+    <div><button id="assemble" type="button">一键组装</button> <button id="reset" type="button">恢复材料状态</button></div>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="甲乙两套实验装置组装预览"></canvas>
+        <div class="caption">滚轮缩放｜拖动空白处平移视图｜组装过程不自动聚焦</div>
+      </div>
+      <div class="status" id="status">两组瓶内种子已经准备好。点击“一键组装”只完成装置连接，不自动注水。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">ASSEMBLY PREVIEW · V1</p>
+      <h2>组装顺序</h2>
+      <p>甲、乙同步组装。器材先到达目标正上方并校正方向，再沿竖直方向从上向下插入或落位。</p>
+      <dl>
+        <div><dt>阶段 1</dt><dd>双孔塞压入瓶口 · 0.45s</dd></div>
+        <div><dt>阶段 2</dt><dd>漏斗升高、对准并垂直插入 · 0.90s</dd></div>
+        <div><dt>阶段 3</dt><dd>试管转为竖直 · 0.50s</dd></div>
+        <div><dt>阶段 4</dt><dd>导气管升起校正 · 0.55s</dd></div>
+        <div><dt>阶段 5</dt><dd>导气管双端连接 · 0.45s</dd></div>
+        <div><dt>阶段 6</dt><dd>间距检查 · 0.20s</dd></div>
+      </dl>
+      <div class="checks"><strong>当前不执行</strong><ul><li>不向漏斗注水</li><li>不产生瓶内水位变化</li><li>不产生气泡或石灰水浑浊</li><li>两只注水烧杯保持在各组材料位置</li></ul></div>
+    </aside>
+  </main>
+  <footer>本页只检查两套装置的比例、连接、间距和组装路径。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

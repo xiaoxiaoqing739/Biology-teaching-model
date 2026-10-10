@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二 · 种子萌发时释放二氧化碳</title>
+  <link rel="stylesheet" href="./experiment-oxygen/experiment.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>植物的呼吸作用——三个证据的交互式演示实验</h1>
+    <nav><button id="fullscreen-toggle" type="button" aria-pressed="false">页面全屏</button><button id="reset-view" type="button">复位视图</button><button id="reset-experiment" type="button">重新实验</button></nav>
+  </header>
+  <main class="lab-shell">
+    <section class="viewport" aria-label="实验二三维交互场景">
+      <canvas id="experiment-scene"></canvas>
+      <nav class="experiment-switcher" aria-label="实验切换"><button type="button" data-experiment="oxygen">实验一 · 种子萌发时吸收氧气</button><button class="active" type="button" data-experiment="carbon-dioxide" aria-current="page">实验二 · 种子萌发时释放二氧化碳</button><button type="button" data-experiment="energy">实验三 · 种子萌发时释放能量</button></nav>
+      <div class="scene-status" aria-live="polite"><strong id="scene-phase">准备实验二</strong><span id="scene-hint">现有材料已摆放在后方实验二材料区。</span></div>
+      <aside class="co2-detail" id="co2-detail" hidden aria-live="polite"><header><strong>石灰水反应同步细节</strong><div class="detail-actions"><span id="co2-detail-status">等待通气</span><button class="detail-expand" id="co2-detail-expand" type="button" aria-expanded="false">放大细节</button></div></header><div class="co2-detail-grid"><figure><canvas id="co2-detail-a"></canvas><figcaption>甲组 · 萌发种子</figcaption></figure><figure><canvas id="co2-detail-b"></canvas><figcaption>乙组 · 煮熟种子</figcaption></figure></div></aside>
+      <button class="start-overlay" id="start-experiment" type="button"><strong>开始实验二</strong><span>将甲乙两组全部材料转移到前方操作台</span></button>
+    </section>
+    <aside class="control-panel">
+      <div class="time-card"><span>窗外时间</span><output id="time-output">12:00</output><button id="advance-day" type="button" disabled>24小时后</button></div>
+      <section class="current-step">
+        <div class="step-kicker"><span id="step-number">准备</span><em id="group-badge">甲乙两组</em></div>
+        <h2 id="step-title">材料陈列与转移</h2>
+        <p id="step-instruction">先检查后方材料区。点击“开始实验二”后，器材将分别进入甲组、乙组操作区。</p>
+        <output id="action-feedback">现有12件独立器材已摆放在实验二材料区</output>
+      </section>
+      <section class="step-navigation">
+        <div class="section-title"><strong>实验步骤</strong><span>按甲组、乙组顺序操作</span></div>
+        <div class="step-buttons" id="co2-step-buttons">
+          <button type="button" data-step="0" class="active" disabled>1 材料转移</button><button type="button" data-step="1" id="assemble-apparatus" disabled>2 一键组装</button>
+          <button type="button" data-step="2" disabled>3 静置24小时</button><button type="button" data-step="3" disabled>4 甲组注水</button>
+          <button type="button" data-step="4" disabled>5 乙组注水</button><button type="button" data-step="5" disabled>6 现象对比</button>
+          <button type="button" data-step="6" id="finish-experiment" disabled>7 结束归位</button>
+        </div>
+      </section>
+      <section class="observations">
+        <div class="section-title"><strong>器材状态</strong><span>转移后仍可拖动</span></div>
+        <article id="status-a"><b>甲组 · 萌发种子</b><span>后方材料区</span></article>
+        <article id="status-b"><b>乙组 · 煮熟种子</b><span>后方材料区</span></article>
+      </section>
+      <p class="view-help">拖动烧杯到当前组漏斗上方完成注水；拖动空白区域平移视图；滚轮缩放。步骤变化不会自动改变视角。</p>
+    </aside>
+  </main>
+  <script src="./offline/series-bridge.js"></script>
+  <script src="./offline/experiment-carbon-dioxide.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二模型 02 · 长颈漏斗</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二模型逐项制作 · 第 2 项</p><h1>长颈漏斗</h1></div>
+    <button id="reset" type="button">复位模型与视图</button>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="长颈漏斗三维模型"></canvas>
+        <div class="caption">滚轮缩放｜拖动模型｜松手自动归位｜镜头不自动聚焦</div>
+      </div>
+      <div class="status" id="status">长颈漏斗为连续中空玻璃结构，当前独立展示。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">MODEL 02 · V1</p>
+      <h2>结构与尺寸</h2>
+      <p>漏斗口、锥体与细长漏斗杆连续连接；漏斗杆具有真实内外径，下端采用斜切口。</p>
+      <dl>
+        <div><dt>漏斗口外径</dt><dd>1.00</dd></div>
+        <div><dt>漏斗口内径</dt><dd>0.86</dd></div>
+        <div><dt>漏斗边缘厚度</dt><dd>0.07</dd></div>
+        <div><dt>锥体高度</dt><dd>0.70</dd></div>
+        <div><dt>漏斗杆外径</dt><dd>0.20</dd></div>
+        <div><dt>漏斗杆内径</dt><dd>0.12</dd></div>
+        <div><dt>漏斗杆长度</dt><dd>5.16</dd></div>
+        <div><dt>总高度</dt><dd>5.86</dd></div>
+        <div><dt>下端斜切角</dt><dd>24°</dd></div>
+      </dl>
+      <div class="checks"><strong>交互预留</strong><ul><li>漏斗口、锥体和漏斗杆均可抓取</li><li>细杆具有扩大但不可见的选取范围</li><li>保留瓶塞连接点和水流目标点</li></ul></div>
+    </aside>
+  </main>
+  <footer>当前只制作模型 02；未整合实验二正式网页。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

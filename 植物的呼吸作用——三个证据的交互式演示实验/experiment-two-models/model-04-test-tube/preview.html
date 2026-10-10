@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二模型 04 · 圆底试管</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二模型逐项制作 · 第 4 项</p><h1>透明圆底试管</h1></div>
+    <div><button id="orientation" type="button">切换为组装竖直状态</button> <button id="reset" type="button">复位模型与视图</button></div>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="透明圆底试管三维模型"></canvas>
+        <div class="caption">滚轮缩放｜拖动试管｜横放与竖直状态切换</div>
+      </div>
+      <div class="status" id="status">当前为未组装横放状态；页面没有添加试管架或固定支座。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">MODEL 04 · V1</p>
+      <h2>结构与尺寸</h2>
+      <p>试管采用连续中空玻璃结构，包含圆底、直壁和加厚管口；内部保留石灰水及导气管空间。</p>
+      <dl>
+        <div><dt>外径</dt><dd>0.54</dd></div>
+        <div><dt>内径</dt><dd>0.44</dd></div>
+        <div><dt>总高度</dt><dd>3.20</dd></div>
+        <div><dt>直壁高度</dt><dd>2.93</dd></div>
+        <div><dt>圆底半径</dt><dd>0.27</dd></div>
+        <div><dt>管口外径</dt><dd>0.62</dd></div>
+        <div><dt>管口厚度</dt><dd>0.08</dd></div>
+        <div><dt>玻璃壁厚度</dt><dd>0.05</dd></div>
+      </dl>
+      <div class="checks"><strong>状态与连接预留</strong><ul><li>材料区默认横放，管口方向清楚</li><li>组装后直接落在实验台上并保持竖直</li><li>没有任何可见固定支座</li><li>预留导气管入口、出气口和石灰水容积位置</li></ul></div>
+    </aside>
+  </main>
+  <footer>当前只制作模型 04；尚未加入澄清石灰水与气泡。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>植物的呼吸作用——三个证据的交互式演示实验</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#09161b}
+    .series-stage{position:relative;width:100%;height:100%}.series-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#09161b;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .22s ease}.series-frame.active{opacity:1;visibility:visible;pointer-events:auto}
+    .switch-mask{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(4,15,19,.38);color:#e8faf6;font:600 14px "PingFang SC",sans-serif;pointer-events:none;opacity:0;transition:opacity .15s}.switch-mask.show{opacity:1}.switch-mask span{padding:12px 18px;border:1px solid rgba(115,220,211,.55);border-radius:10px;background:rgba(9,31,36,.92)}
+  </style>
+</head>
+<body>
+  <main class="series-stage" aria-label="植物呼吸作用系列实验">
+    <iframe class="series-frame" data-experiment="oxygen" title="实验一：种子萌发时吸收氧气" src="./experiment-oxygen.html?series=1"></iframe>
+    <iframe class="series-frame" data-experiment="carbon-dioxide" title="实验二：种子萌发时释放二氧化碳" src="./experiment-carbon-dioxide.html?series=1"></iframe>
+    <iframe class="series-frame" data-experiment="energy" title="实验三：种子萌发时释放能量" src="./experiment-energy.html?series=1"></iframe>
+  </main>
+  <div class="switch-mask" aria-live="polite"><span>当前实验器材正在归位……</span></div>
+  <script src="./offline/series-shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二模型 03 · 弯曲导气管</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二模型逐项制作 · 第 3 项</p><h1>弯曲导气管</h1></div>
+    <div><button id="mirror" type="button">切换为乙组镜像</button> <button id="reset" type="button">复位模型与视图</button></div>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="弯曲导气管三维模型"></canvas>
+        <div class="caption">滚轮缩放｜拖动整根导气管｜甲乙镜像切换</div>
+      </div>
+      <div class="status" id="status">当前显示甲组导气管；整根玻璃管由连续曲线生成。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">MODEL 03 · V1</p>
+      <h2>结构与尺寸</h2>
+      <p>导气管使用连续曲线生成，不采用多段直管拼接；内外管壁和两端环形截面分别建模。</p>
+      <dl>
+        <div><dt>外径</dt><dd>0.16</dd></div>
+        <div><dt>内径</dt><dd>0.10</dd></div>
+        <div><dt>瓶内短管</dt><dd>0.62</dd></div>
+        <div><dt>瓶外竖直段</dt><dd>0.84</dd></div>
+        <div><dt>水平段</dt><dd>2.45</dd></div>
+        <div><dt>试管内下降段</dt><dd>5.80</dd></div>
+        <div><dt>上方弯曲半径</dt><dd>0.28</dd></div>
+        <div><dt>试管端弯曲半径</dt><dd>0.24</dd></div>
+        <div><dt>曲线控制点</dt><dd>18</dd></div>
+        <div><dt>管道细分</dt><dd>160</dd></div>
+      </dl>
+      <div class="checks"><strong>连接预留</strong><ul><li>瓶塞孔端与试管端分别设有锚点</li><li>长端伸至试管底部上方 0.30，进入石灰水液面以下</li><li>整体具有扩大但不可见的抓取范围</li><li>甲乙仅左右镜像，尺寸保持一致</li></ul></div>
+    </aside>
+  </main>
+  <footer>当前只制作模型 03；未整合橡胶塞、试管和正式实验网页。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

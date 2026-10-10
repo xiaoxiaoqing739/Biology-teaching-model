@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二模型 06 · 注水烧杯</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二模型逐项制作 · 第 6 项</p><h1>注水烧杯与清水</h1></div>
+    <div><button id="pour" type="button">演示倾倒姿态</button> <button id="reset" type="button">复位</button></div>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="注水烧杯与清水三维模型"></canvas>
+        <div class="caption">滚轮缩放｜拖动烧杯｜62° 倾倒｜连续水流与余滴</div>
+      </div>
+      <div class="status" id="status">烧杯初始装水量为有效容积的 78%。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">MODEL 06 · V1</p>
+      <h2>结构与尺寸</h2>
+      <p>烧杯为上宽下窄的中空透明玻璃结构；杯口曲线在倾倒侧自然外延形成一体化导流嘴，清水位于烧杯内部。</p>
+      <dl>
+        <div><dt>杯口外径</dt><dd>1.24</dd></div>
+        <div><dt>杯底外径</dt><dd>1.04</dd></div>
+        <div><dt>高度</dt><dd>1.66</dd></div>
+        <div><dt>壁厚</dt><dd>0.06</dd></div>
+        <div><dt>初始水量</dt><dd>78%</dd></div>
+        <div><dt>演示倾倒角</dt><dd>62°</dd></div>
+        <div><dt>有效角度</dt><dd>58°–65°</dd></div>
+      </dl>
+      <div class="checks"><strong>交互预留</strong><ul><li>甲、乙各使用一只独立实例</li><li>清水固定在烧杯内部并随杯体移动、旋转</li><li>杯内水量与水流强度由同一倾倒进度控制</li><li>水流从实时杯口位置产生并受重力弯曲</li><li>水流结束前变细并出现少量余滴</li></ul></div>
+    </aside>
+  </main>
+  <footer>模型 06 完成后，可进入甲乙两套实验装置组装。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

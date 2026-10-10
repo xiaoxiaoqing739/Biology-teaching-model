@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>实验二模型 05 · 澄清石灰水</title>
+  <link rel="stylesheet" href="../model-01-stopper/preview.css">
+</head>
+<body>
+  <header>
+    <div><p>实验二模型逐项制作 · 第 5 项</p><h1>澄清石灰水与气泡</h1></div>
+    <div><button id="group-a" type="button">播放甲组变化</button> <button id="group-b" type="button">播放乙组对照</button> <button id="reset" type="button">复位</button></div>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="canvas-shell">
+        <canvas id="model-canvas" aria-label="试管内澄清石灰水三维效果"></canvas>
+        <div class="caption">甲组 8 秒逐渐浑浊｜乙组有气泡但保持澄清</div>
+      </div>
+      <div class="status" id="status">初始状态：澄清石灰水，尚未通入气体。</div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow">MODEL 05 · V1</p>
+      <h2>液体与现象数据</h2>
+      <p>试管模型仅作为透明容器复用；本阶段新增内容是石灰水、悬浮颗粒、气泡和液面波纹。</p>
+      <dl>
+        <div><dt>液柱高度</dt><dd>2.10（约 2/3）</dd></div>
+        <div><dt>液体直径</dt><dd>0.42</dd></div>
+        <div><dt>初始透明度</dt><dd>0.30</dd></div>
+        <div><dt>最终透明度</dt><dd>0.90</dd></div>
+        <div><dt>悬浮颗粒</dt><dd>110</dd></div>
+        <div><dt>完整变化时间</dt><dd>8s</dd></div>
+        <div><dt>同屏气泡池</dt><dd>22</dd></div>
+        <div><dt>气泡上升时间</dt><dd>0.8–1.2s</dd></div>
+      </dl>
+      <div class="checks"><strong>现象规则</strong><ul><li>气泡从导气管真实出气高度产生</li><li>气泡到液面后消失并触发波纹</li><li>甲组 1 秒后开始逐步变浑浊</li><li>乙组同样产生气泡，但始终保持澄清</li></ul></div>
+    </aside>
+  </main>
+  <footer>当前只制作模型 05；尚未制作注水烧杯与清水。</footer>
+  <script type="module" src="./preview.js"></script>
+</body>
+</html>

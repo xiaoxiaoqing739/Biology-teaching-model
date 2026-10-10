@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>植物呼吸作用系列实验台分区预览</title>
+  <link rel="stylesheet" href="./bench-layout/preview.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>植物的呼吸作用 · 系列实验台</h1>
+      <p>Three.js 分区模型｜按实验材料与操作物位规划，未放置器材模型</p>
+    </div>
+    <div class="header-controls">
+      <div class="time-state" aria-live="polite"><span>当前时间</span><output id="time-output">12:00</output></div>
+      <button id="advance-day" type="button">24小时后</button>
+      <button id="reset-view" type="button">复位视图</button>
+    </div>
+  </header>
+  <main aria-label="三个实验的共用实验台分区模型">
+    <canvas id="bench-scene"></canvas>
+    <section id="zone-headings" aria-label="实验台分区名称"></section>
+    <section id="operation-labels" aria-label="实验操作台分区名称"></section>
+    <section class="guide">
+      <strong>当前审核：实验台与物位</strong>
+      <h2>从左到右依次为实验一、实验二、实验三</h2>
+      <p>后方长台存放三个实验的器材，前方操作台完成当前实验步骤。实验二因包含排气、注水和石灰水检验物位，占用最大存放区域。</p>
+    </section>
+  </main>
+  <footer>
+    <span id="bench-status"></span>
+    <ul id="zone-summary" aria-label="分区摘要"></ul>
+  </footer>
+  <script type="module" src="./bench-layout/preview.js"></script>
+</body>
+</html>
