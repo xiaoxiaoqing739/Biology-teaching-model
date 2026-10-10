@@ -109,6 +109,17 @@ window.SITE_CATALOG = [
     featured: true
   },
   {
+    id: "plant-respiration-three-evidence",
+    title: "植物的呼吸作用——三个证据",
+    node: "7s-4-2",
+    desc: "通过吸收氧气、释放二氧化碳和释放能量三个可交互实验，完整建立萌发种子进行呼吸作用的证据链。支持本地离线使用。",
+    url: "植物的呼吸作用——三个证据的交互式演示实验/index.html",
+    cover: "assets/covers/plant-respiration-three-evidence.svg",
+    type: "虚拟实验",
+    status: "online",
+    featured: true
+  },
+  {
     id: "leaf-structure-builder",
     title: "叶片结构模型搭建",
     node: "7s-4-1",
